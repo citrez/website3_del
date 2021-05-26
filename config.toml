@@ -42,7 +42,7 @@ disqusShortname = "yourdiscussshortname"
 [params]
     since = 2021
     author = "Ezra Citron"               # Author's name
-    subtitle = "Curious Coding"       # Subtitle
+    subtitle = "Casual Coding"       # Subtitle
     cdn_url = ""           # Base CDN URL
     home_mode = "" # post or other
 
