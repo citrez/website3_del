@@ -38,6 +38,11 @@ disqusShortname = "yourdiscussshortname"
     name = "About"
     url = "/about"
     weight = 4
+    
+      [[menu.main]]
+    name = "Resources"
+    url = "/resources"
+    weight = 4
 
 [params]
     since = 2021
