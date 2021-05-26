@@ -1,0 +1,81 @@
+---
+title: Automation using python-pptx
+author: Ezra
+date: '2021-05-10'
+slug: []
+categories: ['python', 'automation', 'powerpoint']
+tags: ['a tag']
+description: ~
+featured_image: ~
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,warning = FALSE,error = FALSE,message = FALSE)
+```
+
+
+Automate Power point generation.
+Here's the problem, you are are asked to run some analysis and generate a report for a population.
+You produce some great work, creating some really stylish works that answers all all the questions and tells a great story. Then comes the inevitable "... and what does this look like for the US only..."
+
+In this blog i'll show you how to automate creating sub reports in powerpoint. We'll use this  employee dataset which you can find it on [kaggle](www.google.com). Each row is a new person in the company and we are given given information such as where the employee is married, thier ethncity, thier pay and how satisfied they are as employees. 
+
+I'm going to produce a mock report  of all 311 employees, and then automate the generation of separate sub-reports for each department.
+
+First things first, lets read it the data.
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(kableExtra)
+headcount <- read_csv('../../../static/data/HRDataset_v14.csv')
+DT::datatable(
+  headcount %>% select(Employee_Name,ManagerID,RaceDesc,Salary),
+  class = 'cell-border stripe'
+  ) 
+```
+
+There are 6 departments, so these will be our final sub-reports
+```{r}
+headcount %>% 
+  count(Department)
+```
+
+number of married
+```{r include=FALSE}
+headcount %>% 
+  ggplot(aes(MarriedID))+
+  geom_bar()
+```
+
+distribution of salary
+```{r include=F}
+headcount %>% 
+  ggplot(aes(Salary))+
+  geom_histogram()
+```
+
+ethnicity
+```{r include=F}
+headcount %>% 
+  ggplot(aes(RaceDesc))+
+  geom_bar()+
+  coord_flip()
+```
+
+employee satisfaction
+
+```{r include=F}
+headcount %>% count(EmpSatisfaction) %>%
+  ggplot(aes(x = 1, y = n,fill = EmpSatisfaction))+
+  geom_col()
+  # geom_text(aes(y = cumsum(n),label = (n)))
+```
+
+
+```{python}
+# from pptx import Presentation
+# import pandas as pd
+# print(type(r.df))
+
+```
+

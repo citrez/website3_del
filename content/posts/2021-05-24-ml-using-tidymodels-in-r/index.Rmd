@@ -1,0 +1,176 @@
+---
+title: ML using Tidymodels in R
+author: Ezra Citron
+date: '2021-05-24'
+slug: []
+categories: ['Machine Learing','tidymodels']
+tags: []
+description: ~
+#featured_image: "/post_tidymodels/tidymodels.jpeg"
+--- 
+ 
+
+For a long while Machine Learning in R has seemed like a poor substitute for python's scikit-learn. R's strengths have historically been in data manipulation and statistical analysis but has lagged behind python in terms of having a consistent and easily-useable API for machine learning...
+This is where the `tidymodels` framework comes in. The aim of tidymodels is to mimic the consistency and simplicity of the tidyverse for machine learning, so that you can run your entire pipeline without leaving the comfort of Rstudio. 
+At a very high level, this is what the workflow should look like. 
+
+![data science workflow](/post_tidymodels/ds_flow.png)
+
+Lets meet the packages.
+
+```{r setup, include =F,echo=F}
+
+knitr::opts_chunk$set(echo = TRUE,message = F,warning = F )
+```
+
+
+```{r load_packages}
+library(tidyverse)
+library(tidymodels)
+```
+
+There are few sub-packages that you should become familiar with in the `tidymodels` eco system. Much like the tidyverse has dplyr, purrr, readr, stringr...etc tidymodels has rsamples, recipies, parsnip, tune... etc. 
+
+- `rsample` - Different types of re-samples
+- `recipes` - Transformations for model data pre-processing
+- `parnip` - A common interface for model creation
+- `yardstick` - Measure model performance
+
+I have heard the Rstudio community refer to ['consious uncoupling'](https://github.com/r-lib/devtools#conscious-uncoupling) when talking about splitting packages up into smaller onces which do a specific job. 'consious uncoupling' sounds too similar to something out of a gwenith paltrow book for me to feel fully comfortable with, but i think the idea makes sense. 
+
+![](/post_tidymodels/tidymodels_flow.png)
+
+
+This walkthrough is  inspired by the amazing work of julia silge from Rstudio, one of the creators of tidymodels. If you haven't already, I highly recommend you check out her blog for more info. I was also heavily guided by [this](https://rviews.rstudio.com/2019/06/19/a-gentle-intro-to-tidymodels/) tidymodels blogpost - well worth checking out.
+
+I'll be using `iris` dataset that comes pre-loaded with tidyverse, so that we can focus on the methods rather than the data and so that no one has an excuse not to follow along. In future blogs, i'll explore other data sources.
+```{r}
+iris %>% head(n = 5)
+```
+
+
+Alight, enough talk, lets dive in. 
+
+```{r}
+library(rsample)
+iris_split <- rsample::initial_split(iris,prop = 0.7,strata = Species)
+iris_split
+```
+
+We use rsample to split into training and testing set, much like 'train_test_split' from sklearn.model_selection in python. This returns a split object, which prints the number of rows in the train, test set and overall rows. The training and testing data can be accessed pretty easily as follows
+
+```{r}
+iris_train <- training(iris_split) 
+iris_test <- testing(iris_split)
+iris_train %>% head(n = 5) 
+```
+
+The `recipies` package will give us the tools we need for pre-processing our iris data.
+We need to tell the recipie the predictor and predicted variable, we give it this information in formula form i.e `Species ~ .` where . is a shorthand for 'all other variables'.
+
+The we pipe this reicpie into various steps, which do all sorts of best-pratice ML pre-processing steps for you. Some examples include:
+
+- step_zv() - removes vaiables with zero varience
+- step_lag() - creates a lagged variable
+- step_center() - centers variable to have mean of zero
+- step_other() - pool infrequent categorical variables into "Other"
+- step_scale() - creates a standard deviation of one
+- step_corr() - removes highly correlated variables
+- step_dummy() - creates dummys (or one-hot-encoding) from categorical variables
+
+and many, many [others](https://recipes.tidymodels.org/reference/index.html)...
+
+I find, not only are these convenient for data pre-processing, but they help enforce best pratice, and also encorage you to tune these pre-processing steps as part of your overall model tuning. Something which I feel is underrated and can hugely improve model accuracy. 
+
+```{r}
+iris_recipe <- iris_train %>% 
+  recipe(Species ~ . ) %>% 
+  step_corr(all_predictors(),threshold = 0.9) %>%
+  step_center(all_predictors(), -all_outcomes()) %>%
+  step_scale(all_predictors(), -all_outcomes())
+
+iris_recipe_prepped <-  prep(iris_recipe)
+```
+
+The unprepper recipie is the general blueprint for preprocessing. 'prepping' it, preforms the preprocessing with the training set. So for example, It will use the trianing set to decide which variables in needs to drop through the `step_corr()` step. See the differnce in outputs between `iris_recipe` and `iris_recipe_prepped` for the general and specific case.
+
+
+*Remeber* the test set must be transformed using the exact same pre-processing 'learned' from the training set. I.e if the step_corr() removed `Petal.Length` column from the data, this must be removed from test data, even if the correlation did not meet the threshold in the test set. Another example, the training set was centered and scaled by subtracting the mean of each column and deivding by the standard deviation. The **test set** is scaled using the **traiing set** mean and standard deviation. 
+
+So we `bake()` our test set using the recipe prepped on the traiing set
+
+
+```{r}
+iris_test_baked <- iris_recipe_prepped %>%
+  bake(iris_test) 
+```
+
+
+```{r}
+iris_train_juiced<- juice(iris_recipe_prepped)
+```
+
+### Time to actually train a model
+
+There are often many different packages that fit the same type of model, with each one having slightly different interface and terminology. The beauty of tidymodels is that it provides a consistent set of functions and augments and then allows you to pick which package to use 'behind the scenes'.
+
+To make the concrete, training a random forest can be done with `ranger` and `randomForst` packages. 
+To set the hyperparameter for the number of trees you want to build ranger uses `nu.trees` randomForest uses `ntree`. Tidymodels eliminates this unnecessary complication, making it much simpler to switch between models. 
+
+```{r}
+iris_rf <- rand_forest(trees = 150, mode = 'classification') %>% 
+  set_engine('randomForest') %>% 
+  fit(Species~., data = iris_train_juiced)
+```
+
+the `rand_forest` function generates your specification for the model, usingthings like:
+- trees - The number of trees contained in the ensemble.
+- min_n - The minimum number of data points in a node that are required for the node to be split further.
+This is quite similar to the RandomForestClassifier class from the sklearn.ensemble module.
+
+set_engine allows you to seemlessly move between the package used to fit the model, we could have written
+`set_engine("ranger")` instead. 
+
+`fit` fits the model to the training data, with the formula telling the model which variables are predictors and predicted.
+
+DONE!
+
+To summarise, we split into a training and test set using rsamle. We preprocessed our data using recipies and then trained a model using parsnip. Now lets evaluate how well our model has done using yardstick.
+
+First, lets use our model to predict the Species on our test set.
+```{r}
+predict(iris_rf,iris_test_baked)
+```
+
+Another big benefit tidymodels ecosystem is that its works so smoothly with the tidyverse. 
+The output  of the `predict()` function is a tidy tibble.
+
+We can now easily stick this next to our test set to see where the predictions were right and wrong
+
+```{r}
+ bind_cols(iris_test,predict(iris_rf,iris_test_baked) ) 
+```
+
+we can pipe this into metrics to get the overall accuracy which is #correctly classified/#total
+
+```{r}
+ bind_cols(iris_test,predict(iris_rf,iris_test_baked) ) %>%
+  metrics(truth = Species, estimate = .pred_class)
+```
+
+You can also get back the predicted probability for each class
+```{r}
+ bind_cols(iris_test,predict(iris_rf,iris_test_baked,type = 'prob') )
+```
+
+
+```{r}
+ bind_cols(iris_test,predict(iris_rf,iris_test_baked,type = 'prob') ) %>%
+  roc_curve(Species, .pred_setosa:.pred_virginica) %>%
+  autoplot()
+```
+
+Which you need to build an [ROC_AUC curve](https://towardsdatascience.com/understanding-auc-roc-curve-68b2303cc9c5) which plots the TPR and FNR for different thresholds. ![confusion matrix](/post_tidymodels/confusionmatrix.jpeg){width=5%}
+
+
+Thanks for sticking around, I hope I've convinced you that tidymodels is a reasonable substitution for other ML packages and can help simplify you workflow. Stay tuned for more tidymodelling blogs in future. 

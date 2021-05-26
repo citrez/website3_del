@@ -1,0 +1,276 @@
+---
+title: ML using Tidymodels in R
+author: Ezra Citron
+date: '2021-05-24'
+slug: []
+categories: ['Machine Learing','tidymodels']
+tags: []
+description: ~
+#featured_image: "/post_tidymodels/tidymodels.jpeg"
+--- 
+
+
+
+<p>For a long while Machine Learning in R has seemed like a poor substitute for python’s scikit-learn. R’s strengths have historically been in data manipulation and statistical analysis but has lagged behind python in terms of having a consistent and easily-useable API for machine learning…
+This is where the <code>tidymodels</code> framework comes in. The aim of tidymodels is to mimic the consistency and simplicity of the tidyverse for machine learning, so that you can run your entire pipeline without leaving the comfort of Rstudio.
+At a very high level, this is what the workflow should look like.</p>
+<div class="figure">
+<img src="/post_tidymodels/ds_flow.png" alt="" />
+<p class="caption">data science workflow</p>
+</div>
+<p>Lets meet the packages.</p>
+<pre class="r"><code>library(tidyverse)
+library(tidymodels)</code></pre>
+<p>There are few sub-packages that you should become familiar with in the <code>tidymodels</code> eco system. Much like the tidyverse has dplyr, purrr, readr, stringr…etc tidymodels has rsamples, recipies, parsnip, tune… etc.</p>
+<ul>
+<li><code>rsample</code> - Different types of re-samples</li>
+<li><code>recipes</code> - Transformations for model data pre-processing</li>
+<li><code>parnip</code> - A common interface for model creation</li>
+<li><code>yardstick</code> - Measure model performance</li>
+</ul>
+<p>I have heard the Rstudio community refer to <a href="https://github.com/r-lib/devtools#conscious-uncoupling">‘consious uncoupling’</a> when talking about splitting packages up into smaller onces which do a specific job. ‘consious uncoupling’ sounds too similar to something out of a gwenith paltrow book for me to feel fully comfortable with, but i think the idea makes sense.</p>
+<p><img src="/post_tidymodels/tidymodels_flow.png" /></p>
+<p>This walkthrough is inspired by the amazing work of julia silge from Rstudio, one of the creators of tidymodels. If you haven’t already, I highly recommend you check out her blog for more info. I was also heavily guided by <a href="https://rviews.rstudio.com/2019/06/19/a-gentle-intro-to-tidymodels/">this</a> tidymodels blogpost - well worth checking out.</p>
+<p>I’ll be using <code>iris</code> dataset that comes pre-loaded with tidyverse, so that we can focus on the methods rather than the data and so that no one has an excuse not to follow along. In future blogs, i’ll explore other data sources.</p>
+<pre class="r"><code>iris %&gt;% head(n = 5)</code></pre>
+<pre><code>##   Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+## 1          5.1         3.5          1.4         0.2  setosa
+## 2          4.9         3.0          1.4         0.2  setosa
+## 3          4.7         3.2          1.3         0.2  setosa
+## 4          4.6         3.1          1.5         0.2  setosa
+## 5          5.0         3.6          1.4         0.2  setosa</code></pre>
+<p>Alight, enough talk, lets dive in.</p>
+<pre class="r"><code>library(rsample)
+iris_split &lt;- rsample::initial_split(iris,prop = 0.7,strata = Species)
+iris_split</code></pre>
+<pre><code>## &lt;Analysis/Assess/Total&gt;
+## &lt;105/45/150&gt;</code></pre>
+<p>We use rsample to split into training and testing set, much like ‘train_test_split’ from sklearn.model_selection in python. This returns a split object, which prints the number of rows in the train, test set and overall rows. The training and testing data can be accessed pretty easily as follows</p>
+<pre class="r"><code>iris_train &lt;- training(iris_split) 
+iris_test &lt;- testing(iris_split)
+iris_train %&gt;% head(n = 5) </code></pre>
+<pre><code>##    Sepal.Length Sepal.Width Petal.Length Petal.Width Species
+## 1           5.1         3.5          1.4         0.2  setosa
+## 2           4.9         3.0          1.4         0.2  setosa
+## 3           4.7         3.2          1.3         0.2  setosa
+## 9           4.4         2.9          1.4         0.2  setosa
+## 10          4.9         3.1          1.5         0.1  setosa</code></pre>
+<p>The <code>recipies</code> package will give us the tools we need for pre-processing our iris data.
+We need to tell the recipie the predictor and predicted variable, we give it this information in formula form i.e <code>Species ~ .</code> where . is a shorthand for ‘all other variables’.</p>
+<p>The we pipe this reicpie into various steps, which do all sorts of best-pratice ML pre-processing steps for you. Some examples include:</p>
+<ul>
+<li>step_zv() - removes vaiables with zero varience</li>
+<li>step_lag() - creates a lagged variable</li>
+<li>step_center() - centers variable to have mean of zero</li>
+<li>step_other() - pool infrequent categorical variables into “Other”</li>
+<li>step_scale() - creates a standard deviation of one</li>
+<li>step_corr() - removes highly correlated variables</li>
+<li>step_dummy() - creates dummys (or one-hot-encoding) from categorical variables</li>
+</ul>
+<p>and many, many <a href="https://recipes.tidymodels.org/reference/index.html">others</a>…</p>
+<p>I find, not only are these convenient for data pre-processing, but they help enforce best pratice, and also encorage you to tune these pre-processing steps as part of your overall model tuning. Something which I feel is underrated and can hugely improve model accuracy.</p>
+<pre class="r"><code>iris_recipe &lt;- iris_train %&gt;% 
+  recipe(Species ~ . ) %&gt;% 
+  step_corr(all_predictors(),threshold = 0.9) %&gt;%
+  step_center(all_predictors(), -all_outcomes()) %&gt;%
+  step_scale(all_predictors(), -all_outcomes())
+
+iris_recipe_prepped &lt;-  prep(iris_recipe)</code></pre>
+<p>The unprepper recipie is the general blueprint for preprocessing. ‘prepping’ it, preforms the preprocessing with the training set. So for example, It will use the trianing set to decide which variables in needs to drop through the <code>step_corr()</code> step. See the differnce in outputs between <code>iris_recipe</code> and <code>iris_recipe_prepped</code> for the general and specific case.</p>
+<p><em>Remeber</em> the test set must be transformed using the exact same pre-processing ‘learned’ from the training set. I.e if the step_corr() removed <code>Petal.Length</code> column from the data, this must be removed from test data, even if the correlation did not meet the threshold in the test set. Another example, the training set was centered and scaled by subtracting the mean of each column and deivding by the standard deviation. The <strong>test set</strong> is scaled using the <strong>traiing set</strong> mean and standard deviation.</p>
+<p>So we <code>bake()</code> our test set using the recipe prepped on the traiing set</p>
+<pre class="r"><code>iris_test_baked &lt;- iris_recipe_prepped %&gt;%
+  bake(iris_test) </code></pre>
+<pre class="r"><code>iris_train_juiced&lt;- juice(iris_recipe_prepped)</code></pre>
+<div id="time-to-actually-train-a-model" class="section level3">
+<h3>Time to actually train a model</h3>
+<p>There are often many different packages that fit the same type of model, with each one having slightly different interface and terminology. The beauty of tidymodels is that it provides a consistent set of functions and augments and then allows you to pick which package to use ‘behind the scenes’.</p>
+<p>To make the concrete, training a random forest can be done with <code>ranger</code> and <code>randomForst</code> packages.
+To set the hyperparameter for the number of trees you want to build ranger uses <code>nu.trees</code> randomForest uses <code>ntree</code>. Tidymodels eliminates this unnecessary complication, making it much simpler to switch between models.</p>
+<pre class="r"><code>iris_rf &lt;- rand_forest(trees = 150, mode = &#39;classification&#39;) %&gt;% 
+  set_engine(&#39;randomForest&#39;) %&gt;% 
+  fit(Species~., data = iris_train_juiced)</code></pre>
+<p>the <code>rand_forest</code> function generates your specification for the model, usingthings like:
+- trees - The number of trees contained in the ensemble.
+- min_n - The minimum number of data points in a node that are required for the node to be split further.
+This is quite similar to the RandomForestClassifier class from the sklearn.ensemble module.</p>
+<p>set_engine allows you to seemlessly move between the package used to fit the model, we could have written
+<code>set_engine("ranger")</code> instead.</p>
+<p><code>fit</code> fits the model to the training data, with the formula telling the model which variables are predictors and predicted.</p>
+<p>DONE!</p>
+<p>To summarise, we split into a training and test set using rsamle. We preprocessed our data using recipies and then trained a model using parsnip. Now lets evaluate how well our model has done using yardstick.</p>
+<p>First, lets use our model to predict the Species on our test set.</p>
+<pre class="r"><code>predict(iris_rf,iris_test_baked)</code></pre>
+<pre><code>## # A tibble: 45 x 1
+##    .pred_class
+##    &lt;fct&gt;      
+##  1 setosa     
+##  2 setosa     
+##  3 setosa     
+##  4 setosa     
+##  5 setosa     
+##  6 setosa     
+##  7 setosa     
+##  8 setosa     
+##  9 setosa     
+## 10 setosa     
+## # … with 35 more rows</code></pre>
+<p>Another big benefit tidymodels ecosystem is that its works so smoothly with the tidyverse.
+The output of the <code>predict()</code> function is a tidy tibble.</p>
+<p>We can now easily stick this next to our test set to see where the predictions were right and wrong</p>
+<pre class="r"><code> bind_cols(iris_test,predict(iris_rf,iris_test_baked) ) </code></pre>
+<pre><code>##    Sepal.Length Sepal.Width Petal.Length Petal.Width    Species .pred_class
+## 1           4.6         3.1          1.5         0.2     setosa      setosa
+## 2           5.0         3.6          1.4         0.2     setosa      setosa
+## 3           5.4         3.9          1.7         0.4     setosa      setosa
+## 4           4.6         3.4          1.4         0.3     setosa      setosa
+## 5           5.0         3.4          1.5         0.2     setosa      setosa
+## 6           4.8         3.0          1.4         0.1     setosa      setosa
+## 7           5.4         3.9          1.3         0.4     setosa      setosa
+## 8           5.4         3.4          1.7         0.2     setosa      setosa
+## 9           5.2         4.1          1.5         0.1     setosa      setosa
+## 10          4.9         3.6          1.4         0.1     setosa      setosa
+## 11          5.0         3.5          1.3         0.3     setosa      setosa
+## 12          4.5         2.3          1.3         0.3     setosa      setosa
+## 13          4.6         3.2          1.4         0.2     setosa      setosa
+## 14          5.3         3.7          1.5         0.2     setosa      setosa
+## 15          5.0         3.3          1.4         0.2     setosa      setosa
+## 16          7.0         3.2          4.7         1.4 versicolor  versicolor
+## 17          5.5         2.3          4.0         1.3 versicolor  versicolor
+## 18          4.9         2.4          3.3         1.0 versicolor  versicolor
+## 19          6.6         2.9          4.6         1.3 versicolor  versicolor
+## 20          5.6         3.0          4.5         1.5 versicolor  versicolor
+## 21          6.4         2.9          4.3         1.3 versicolor  versicolor
+## 22          6.6         3.0          4.4         1.4 versicolor  versicolor
+## 23          6.8         2.8          4.8         1.4 versicolor  versicolor
+## 24          6.0         2.9          4.5         1.5 versicolor  versicolor
+## 25          6.7         3.1          4.7         1.5 versicolor  versicolor
+## 26          5.5         2.5          4.0         1.3 versicolor  versicolor
+## 27          5.5         2.6          4.4         1.2 versicolor  versicolor
+## 28          6.1         3.0          4.6         1.4 versicolor  versicolor
+## 29          5.6         2.7          4.2         1.3 versicolor  versicolor
+## 30          5.1         2.5          3.0         1.1 versicolor  versicolor
+## 31          6.3         3.3          6.0         2.5  virginica   virginica
+## 32          7.1         3.0          5.9         2.1  virginica   virginica
+## 33          6.5         3.0          5.8         2.2  virginica   virginica
+## 34          7.2         3.6          6.1         2.5  virginica   virginica
+## 35          6.4         3.2          5.3         2.3  virginica   virginica
+## 36          6.9         3.2          5.7         2.3  virginica   virginica
+## 37          6.3         2.7          4.9         1.8  virginica   virginica
+## 38          6.2         2.8          4.8         1.8  virginica   virginica
+## 39          7.9         3.8          6.4         2.0  virginica   virginica
+## 40          7.7         3.0          6.1         2.3  virginica   virginica
+## 41          6.3         3.4          5.6         2.4  virginica   virginica
+## 42          6.7         3.1          5.6         2.4  virginica   virginica
+## 43          6.8         3.2          5.9         2.3  virginica   virginica
+## 44          6.3         2.5          5.0         1.9  virginica   virginica
+## 45          6.2         3.4          5.4         2.3  virginica   virginica</code></pre>
+<p>we can pipe this into metrics to get the overall accuracy which is #correctly classified/#total</p>
+<pre class="r"><code> bind_cols(iris_test,predict(iris_rf,iris_test_baked) ) %&gt;%
+  metrics(truth = Species, estimate = .pred_class)</code></pre>
+<pre><code>## # A tibble: 2 x 3
+##   .metric  .estimator .estimate
+##   &lt;chr&gt;    &lt;chr&gt;          &lt;dbl&gt;
+## 1 accuracy multiclass         1
+## 2 kap      multiclass         1</code></pre>
+<p>You can also get back the predicted probability for each class</p>
+<pre class="r"><code> bind_cols(iris_test,predict(iris_rf,iris_test_baked,type = &#39;prob&#39;) )</code></pre>
+<pre><code>##    Sepal.Length Sepal.Width Petal.Length Petal.Width    Species .pred_setosa
+## 1           4.6         3.1          1.5         0.2     setosa  0.993333333
+## 2           5.0         3.6          1.4         0.2     setosa  0.993333333
+## 3           5.4         3.9          1.7         0.4     setosa  1.000000000
+## 4           4.6         3.4          1.4         0.3     setosa  1.000000000
+## 5           5.0         3.4          1.5         0.2     setosa  0.993333333
+## 6           4.8         3.0          1.4         0.1     setosa  0.993333333
+## 7           5.4         3.9          1.3         0.4     setosa  1.000000000
+## 8           5.4         3.4          1.7         0.2     setosa  1.000000000
+## 9           5.2         4.1          1.5         0.1     setosa  1.000000000
+## 10          4.9         3.6          1.4         0.1     setosa  1.000000000
+## 11          5.0         3.5          1.3         0.3     setosa  0.993333333
+## 12          4.5         2.3          1.3         0.3     setosa  0.693333333
+## 13          4.6         3.2          1.4         0.2     setosa  1.000000000
+## 14          5.3         3.7          1.5         0.2     setosa  1.000000000
+## 15          5.0         3.3          1.4         0.2     setosa  0.953333333
+## 16          7.0         3.2          4.7         1.4 versicolor  0.013333333
+## 17          5.5         2.3          4.0         1.3 versicolor  0.006666667
+## 18          4.9         2.4          3.3         1.0 versicolor  0.093333333
+## 19          6.6         2.9          4.6         1.3 versicolor  0.000000000
+## 20          5.6         3.0          4.5         1.5 versicolor  0.000000000
+## 21          6.4         2.9          4.3         1.3 versicolor  0.000000000
+## 22          6.6         3.0          4.4         1.4 versicolor  0.000000000
+## 23          6.8         2.8          4.8         1.4 versicolor  0.000000000
+## 24          6.0         2.9          4.5         1.5 versicolor  0.000000000
+## 25          6.7         3.1          4.7         1.5 versicolor  0.006666667
+## 26          5.5         2.5          4.0         1.3 versicolor  0.006666667
+## 27          5.5         2.6          4.4         1.2 versicolor  0.006666667
+## 28          6.1         3.0          4.6         1.4 versicolor  0.000000000
+## 29          5.6         2.7          4.2         1.3 versicolor  0.000000000
+## 30          5.1         2.5          3.0         1.1 versicolor  0.053333333
+## 31          6.3         3.3          6.0         2.5  virginica  0.000000000
+## 32          7.1         3.0          5.9         2.1  virginica  0.000000000
+## 33          6.5         3.0          5.8         2.2  virginica  0.000000000
+## 34          7.2         3.6          6.1         2.5  virginica  0.146666667
+## 35          6.4         3.2          5.3         2.3  virginica  0.006666667
+## 36          6.9         3.2          5.7         2.3  virginica  0.006666667
+## 37          6.3         2.7          4.9         1.8  virginica  0.000000000
+## 38          6.2         2.8          4.8         1.8  virginica  0.000000000
+## 39          7.9         3.8          6.4         2.0  virginica  0.133333333
+## 40          7.7         3.0          6.1         2.3  virginica  0.000000000
+## 41          6.3         3.4          5.6         2.4  virginica  0.073333333
+## 42          6.7         3.1          5.6         2.4  virginica  0.006666667
+## 43          6.8         3.2          5.9         2.3  virginica  0.006666667
+## 44          6.3         2.5          5.0         1.9  virginica  0.000000000
+## 45          6.2         3.4          5.4         2.3  virginica  0.073333333
+##    .pred_versicolor .pred_virginica
+## 1       0.006666667      0.00000000
+## 2       0.006666667      0.00000000
+## 3       0.000000000      0.00000000
+## 4       0.000000000      0.00000000
+## 5       0.006666667      0.00000000
+## 6       0.006666667      0.00000000
+## 7       0.000000000      0.00000000
+## 8       0.000000000      0.00000000
+## 9       0.000000000      0.00000000
+## 10      0.000000000      0.00000000
+## 11      0.006666667      0.00000000
+## 12      0.253333333      0.05333333
+## 13      0.000000000      0.00000000
+## 14      0.000000000      0.00000000
+## 15      0.026666667      0.02000000
+## 16      0.720000000      0.26666667
+## 17      0.960000000      0.03333333
+## 18      0.720000000      0.18666667
+## 19      0.786666667      0.21333333
+## 20      0.953333333      0.04666667
+## 21      0.760000000      0.24000000
+## 22      0.813333333      0.18666667
+## 23      0.646666667      0.35333333
+## 24      0.853333333      0.14666667
+## 25      0.933333333      0.06000000
+## 26      0.926666667      0.06666667
+## 27      0.960000000      0.03333333
+## 28      0.806666667      0.19333333
+## 29      0.953333333      0.04666667
+## 30      0.840000000      0.10666667
+## 31      0.240000000      0.76000000
+## 32      0.000000000      1.00000000
+## 33      0.000000000      1.00000000
+## 34      0.080000000      0.77333333
+## 35      0.133333333      0.86000000
+## 36      0.040000000      0.95333333
+## 37      0.120000000      0.88000000
+## 38      0.153333333      0.84666667
+## 39      0.073333333      0.79333333
+## 40      0.000000000      1.00000000
+## 41      0.313333333      0.61333333
+## 42      0.053333333      0.94000000
+## 43      0.026666667      0.96666667
+## 44      0.173333333      0.82666667
+## 45      0.366666667      0.56000000</code></pre>
+<pre class="r"><code> bind_cols(iris_test,predict(iris_rf,iris_test_baked,type = &#39;prob&#39;) ) %&gt;%
+  roc_curve(Species, .pred_setosa:.pred_virginica) %&gt;%
+  autoplot()</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>Which you need to build an <a href="https://towardsdatascience.com/understanding-auc-roc-curve-68b2303cc9c5">ROC_AUC curve</a> which plots the TPR and FNR for different thresholds. <img src="/post_tidymodels/confusionmatrix.jpeg" style="width:5.0%" alt="confusion matrix" /></p>
+<p>Thanks for sticking around, I hope I’ve convinced you that tidymodels is a reasonable substitution for other ML packages and can help simplify you workflow. Stay tuned for more tidymodelling blogs in future.</p>
+</div>
