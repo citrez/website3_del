@@ -139,7 +139,7 @@ To summarise, we split into a training and test set using rsamle. We preprocesse
 
 First, lets use our model to predict the Species on our test set.
 ```{r}
-predict(iris_rf,iris_test_baked)
+predict(iris_rf,iris_test_baked) %>% head(n = 5)
 ```
 
 Another big benefit tidymodels ecosystem is that its works so smoothly with the tidyverse. 
@@ -148,29 +148,29 @@ The output  of the `predict()` function is a tidy tibble.
 We can now easily stick this next to our test set to see where the predictions were right and wrong
 
 ```{r}
- bind_cols(iris_test,predict(iris_rf,iris_test_baked) ) 
+ bind_cols(iris_test,predict(iris_rf,iris_test_baked) )  %>% head(n = 5)
 ```
 
 we can pipe this into metrics to get the overall accuracy which is #correctly classified/#total
 
 ```{r}
  bind_cols(iris_test,predict(iris_rf,iris_test_baked) ) %>%
-  metrics(truth = Species, estimate = .pred_class)
+  metrics(truth = Species, estimate = .pred_class) %>% head(n = 5)
 ```
 
 You can also get back the predicted probability for each class
 ```{r}
- bind_cols(iris_test,predict(iris_rf,iris_test_baked,type = 'prob') )
+ bind_cols(iris_test,predict(iris_rf,iris_test_baked,type = 'prob') ) %>% head(n = 5)
 ```
 
 
 ```{r}
  bind_cols(iris_test,predict(iris_rf,iris_test_baked,type = 'prob') ) %>%
   roc_curve(Species, .pred_setosa:.pred_virginica) %>%
-  autoplot()
+  ggplot2::autoplot()
 ```
 
-Which you need to build an [ROC_AUC curve](https://towardsdatascience.com/understanding-auc-roc-curve-68b2303cc9c5) which plots the TPR and FNR for different thresholds. ![confusion matrix](/post_tidymodels/confusionmatrix.jpeg){width=5%}
+Which you need to build an [ROC_AUC curve](https://towardsdatascience.com/understanding-auc-roc-curve-68b2303cc9c5) which plots the TPR and FNR for different thresholds. ![confusion matrix](/post_tidymodels/confusionmatrix.jpeg){width=50%}
 
 
 Thanks for sticking around, I hope I've convinced you that tidymodels is a reasonable substitution for other ML packages and can help simplify you workflow. Stay tuned for more tidymodelling blogs in future. 
