@@ -1,4 +1,4 @@
-baseURL = "https://casualcoding.netlify.app/posts/"
+baseURL = "https://casualcoding.netlify.app/"
 languageCode = "en"
 defaultContentLanguage = "en"
 title = "Home"
