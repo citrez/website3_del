@@ -7,11 +7,8 @@ categories: []
 tags: []
 description: null
 featured_image: null
-output: md_document  
+draft: true
 ---
-
-
-
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)

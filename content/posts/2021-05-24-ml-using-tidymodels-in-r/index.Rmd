@@ -8,15 +8,24 @@ tags: []
 description: ~
 #featured_image: "/post_tidymodels/tidymodels.jpeg"
 --- 
- 
+To write on linkedin post 
+(I'm really exited to share my first ever blog post on my newly built websites - yes, lots of firsts!
 
-For a long while Machine Learning in R has seemed like a poor substitute for python's scikit-learn. R's strengths have historically been in data manipulation and statistical analysis but has lagged behind python in terms of having a consistent and easily-useable API for machine learning...
-This is where the `tidymodels` framework comes in. The aim of tidymodels is to mimic the consistency and simplicity of the tidyverse for machine learning, so that you can run your entire pipeline without leaving the comfort of Rstudio. 
-At a very high level, this is what the workflow should look like. 
+I Initially started the project of learning how to build a website during lockdown, as a way of keeping busy during those long self-issolated evenings. But quickly found that I really enjoyed the process. There are loads of great reason to write a blog, like providing motivation to learn new things or to help improve of written communication.
 
-![data science workflow](/post_tidymodels/ds_flow.png)
+I've chosen to write my first ever blog on two of my big interests, machine learning and R. If you work in R but have always used python for your ML, i'd encourage to give tidymodels a try. Simply, it provides a consistent framework for building models, using tidy data principles, all within the comfort of Rstudio.) 
 
-Lets meet the packages.
+
+For a long while Machine Learning in R has seemed like a poor substitute for python's scikit-learn. R's strengths have always been in data manipulation and statistical analysis but been thought to lag behind in terms of having a consistent and easily-useable API for machine learning.
+This is where the `tidymodels` packages comes in. The aim of tidymodels is to mimic the consistency and simplicity of the tidyverse, but for machine learning. It allows you to run your entire data science workflow without leaving the comfort of Rstudio, see bellow.
+
+<br><br>
+
+
+
+![](/post_tidymodels/ds_flow.png)
+
+Lets meet the tidymodels packages.
 
 ```{r setup, include =F,echo=F}
 
@@ -29,17 +38,18 @@ library(tidyverse)
 library(tidymodels)
 ```
 
-There are few sub-packages that you should become familiar with in the `tidymodels` eco system. Much like the tidyverse has dplyr, purrr, readr, stringr...etc tidymodels has rsamples, recipies, parsnip, tune... etc. 
+There are few sub-packages that you should become familiar with in the `tidymodels` eco-system. Much like the tidyverse has dplyr, purrr, readr, stringr...etc tidymodels has rsamples, recipies, parsnip, tune... etc.
 
 - `rsample` - Different types of re-samples
 - `recipes` - Transformations for model data pre-processing
 - `parnip` - A common interface for model creation
 - `yardstick` - Measure model performance
-
-I have heard the Rstudio community refer to ['consious uncoupling'](https://github.com/r-lib/devtools#conscious-uncoupling) when talking about splitting packages up into smaller onces which do a specific job. 'consious uncoupling' sounds too similar to something out of a gwenith paltrow book for me to feel fully comfortable with, but i think the idea makes sense. 
-
+<br>
 ![](/post_tidymodels/tidymodels_flow.png)
 
+I have heard the Rstudio community refer to ['consious uncoupling'](https://github.com/r-lib/devtools#conscious-uncoupling) when talking about splitting packages up into smaller ones which do a specific job. 'consious uncoupling' sounds slightly too similar to something out of a Gwenith Paltrow book for me to feel fully comfortable with, but I think the idea makes sense. 
+
+***
 
 This walkthrough is  inspired by the amazing work of julia silge from Rstudio, one of the creators of tidymodels. If you haven't already, I highly recommend you check out her blog for more info. I was also heavily guided by [this](https://rviews.rstudio.com/2019/06/19/a-gentle-intro-to-tidymodels/) tidymodels blogpost - well worth checking out.
 
@@ -135,7 +145,9 @@ set_engine allows you to seemlessly move between the package used to fit the mod
 
 DONE!
 
-To summarise, we split into a training and test set using rsamle. We preprocessed our data using recipies and then trained a model using parsnip. Now lets evaluate how well our model has done using yardstick.
+To summarise, we split into a training and test set using rsamle. We preprocessed our data using recipies and then trained a model using parsnip. 
+## Evaluating how well the model did
+For this, we use yardstick.
 
 First, lets use our model to predict the Species on our test set.
 ```{r}
@@ -160,7 +172,9 @@ we can pipe this into metrics to get the overall accuracy which is #correctly cl
 
 You can also get back the predicted probability for each class
 ```{r}
- bind_cols(iris_test,predict(iris_rf,iris_test_baked,type = 'prob') ) %>% head(n = 5)
+ bind_cols(iris_test %>% select(Species),
+           predict(iris_rf,iris_test_baked,type = 'prob') ) %>% 
+  head(n = 3)
 ```
 
 
