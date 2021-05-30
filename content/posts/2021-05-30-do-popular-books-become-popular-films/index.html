@@ -1,0 +1,87 @@
+---
+title: Do Popular Books Become Popular Films?
+author: Ezra Citron
+date: '2021-05-30'
+slug: []
+categories: []
+tags: []
+description: ~
+featured_image: ~
+draft: true
+---
+
+
+
+<p>I was watching one of the Harry Potter films for the umtenth time, wondering how such a mediocre films went on to be such huge box office hits. The answer is obvious, the books were hugely popular, and there are hundreds of millions of loyal fans who would watch the film regardless of the quality of the films. So, i thought, in general will a popular book always do well when converted to a film, what are the exceptions? Could I use book sales as a predictor of box office success?</p>
+<p>First things first, lets collect some data. A great oppertunity to try out the webscraping package in R, rvest (a play on words of harvest, as in, harvesting data… ha ha).</p>
+<pre class="r"><code>knitr::opts_chunk$set(echo = TRUE,message = F,warning = F )</code></pre>
+<pre class="r"><code>library(tidyverse)
+library(rvest)</code></pre>
+<p>wikipdepa often has great tables with this type of infoformation. Check out the link to see all of the tables they have on book sales, and the data we are going to scrape.</p>
+<p><img src="/post_popular_books/wiki.png" />
+however, there are over 300 rows of book data, so its too much to copy out manually, or even copy and paste, so we’ll use rvest to scrape the tables.</p>
+<pre class="r"><code>book_wiki_page &lt;- 
+  &quot;https://en.wikipedia.org/wiki/List_of_best-selling_books#List_of_best-selling_individual_books&quot;
+
+book_html &lt;- xml2::read_html(book_wiki_page)</code></pre>
+<p><code>read_html</code> just reads in the page, once we have page saved, we need to tell it where to look.
+This peice of code, tells it to find all the tables.</p>
+<pre class="r"><code>all_tables &lt;- book_html %&gt;% 
+  html_nodes(css = &quot;table.wikitable.sortable&quot; ) 
+all_tables</code></pre>
+<pre><code>## {xml_nodeset (15)}
+##  [1] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
+##  [2] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
+##  [3] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
+##  [4] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
+##  [5] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
+##  [6] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book series&lt;/th&gt;\n&lt; ...
+##  [7] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book series&lt;/th&gt;\n&lt; ...
+##  [8] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book series&lt;/th&gt;\n&lt; ...
+##  [9] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book series&lt;/th&gt;\n&lt; ...
+## [10] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book series&lt;/th&gt;\n&lt; ...
+## [11] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
+## [12] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
+## [13] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
+## [14] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
+## [15] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...</code></pre>
+<p>we now have a list, containing all the tables on the webpage, we want to turn all these individual tables into nice dataframe, and then combine all those 15 dataframes in to a master dataframe with all the information in it. <code>map_dfr</code> applied <code>parse_table</code> to each tables and then sticks them all together. This is a great examples of the simplicity of working in a vectorised way, rather than in a messy loop.</p>
+<pre class="r"><code>parse_table &lt;- function(x) {
+  html_table(x,fill=T) %&gt;%
+    as_tibble() %&gt;% 
+    mutate(across( everything(),as.character ) )
+}
+
+combined_table &lt;- map_dfr(all_tables,parse_table)</code></pre>
+<p>Now, as is often the case with scraped data, this is far from clean. We have a <code>No. of installments</code> and a <code>No. of instalments</code> column. Lets merge them into one.</p>
+<pre class="r"><code>combined_table &lt;- combined_table %&gt;% 
+  mutate(`No. of installments` = coalesce(`No. of installments`,`No. of instalments`)) %&gt;% 
+  select(-`No. of instalments`)</code></pre>
+<p>The <code>Approximate sales</code> is very messy, and it the column we are most concerned about, to lets take care to make sure we extract all the data.</p>
+<pre class="r"><code>combined_table &lt;- combined_table %&gt;%
+  mutate(
+    `Approximate sales_clean` = str_remove(`Approximate sales`, &#39;(\\[\\d+\\])+&#39;),
+    `Approximate sales_numb` = str_extract(`Approximate sales`, &#39;[\\d,\\.]+&#39;),
+    `Approximate sales_multiplier` = if_else(
+      str_detect(`Approximate sales`, &#39;million&#39;),
+      10 **6,1),
+    `Approximate sales_numb` = str_remove_all(`Approximate sales_numb`,&#39;,&#39;),
+    `Approximate sales_numb` = as.double(`Approximate sales_numb`),
+      `Approximate sales_dbl` = `Approximate sales_numb` * `Approximate sales_multiplier`) %&gt;% 
+  select( -`Approximate sales_clean`,- `Approximate sales_numb`, -`Approximate sales_multiplier`)</code></pre>
+<p>Now we’ve cleaned our master tables, some are series, some are individual books.</p>
+<pre class="r"><code>book_series_table &lt;- combined_table %&gt;%
+  filter(!is.na(`Book series`)) %&gt;% 
+  select(-Book) %&gt;% select( `Book series`,everything())
+
+book_table &lt;- combined_table %&gt;% 
+  filter(!is.na(Book)) %&gt;% 
+  select(-`Book series`,-`No. of installments`)</code></pre>
+<p>One last cleanup on the books table</p>
+<pre class="r"><code>book_table &lt;- book_table %&gt;% 
+  mutate(
+    `First published_cleaned` = case_when(
+      `First published` == &#39;18th century&#39; ~ &#39;1800&#39;, 
+      TRUE ~ `First published`),
+    `First published_cleaned` = str_extract(`First published_cleaned`,&#39;\\d+&#39;),
+    `First published_cleaned` = lubridate::as_date(paste0(`First published_cleaned`,&quot;-01-01&quot;) ) )</code></pre>

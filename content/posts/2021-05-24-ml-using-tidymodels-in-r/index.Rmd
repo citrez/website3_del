@@ -13,7 +13,9 @@ To write on linkedin post
 
 I Initially started the project of learning how to build a website during lockdown, as a way of keeping busy during those long self-issolated evenings. But quickly found that I really enjoyed the process. There are loads of great reason to write a blog, like providing motivation to learn new things or to help improve of written communication.
 
-I've chosen to write my first ever blog on two of my big interests, machine learning and R. If you work in R but have always used python for your ML, i'd encourage to give tidymodels a try. Simply, it provides a consistent framework for building models, using tidy data principles, all within the comfort of Rstudio.) 
+I've chosen to write my first ever blog on two of my big interests, machine learning and R. If you work in R but have always used python for your ML, i'd encourage to give tidymodels a try. Simply, it provides a consistent framework for building models, using tidy data principles, all within the comfort of Rstudio.
+
+The source code for my site can be found on my github) 
 
 
 For a long while Machine Learning in R has seemed like a poor substitute for python's scikit-learn. R's strengths have always been in data manipulation and statistical analysis but been thought to lag behind in terms of having a consistent and easily-useable API for machine learning.

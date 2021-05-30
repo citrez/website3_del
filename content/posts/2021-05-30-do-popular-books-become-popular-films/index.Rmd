@@ -1,0 +1,114 @@
+---
+title: Do Popular Books Become Popular Films?
+author: Ezra Citron
+date: '2021-05-30'
+slug: []
+categories: []
+tags: []
+description: ~
+featured_image: ~
+draft: true
+---
+
+I was watching one of the Harry Potter films for the umtenth time, wondering how such a mediocre films went on to be such huge box office hits. The answer is obvious, the books were hugely popular, and there are hundreds of millions of loyal fans who would watch the film regardless of the quality of the films. So, i thought, in general will a popular book always do well when converted to a film, what are the exceptions? Could I use book sales as a predictor of box office success?
+
+First things first, lets collect some data. A great oppertunity to try out the webscraping package in R, rvest (a play on words of harvest, as in, harvesting data... ha ha). 
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE,message = F,warning = F )
+```
+
+
+```{r load_packages}
+library(tidyverse)
+library(rvest)
+
+```
+
+wikipdepa often has great tables with this type of infoformation. Check out the link to see all of the tables they have on book sales, and the data we are going to scrape. 
+
+![](/post_popular_books/wiki.png)
+however, there are over 300 rows of book data, so its too much to copy out manually, or even copy and paste, so we'll use rvest to scrape the tables. 
+
+
+```{r}
+book_wiki_page <- 
+  "https://en.wikipedia.org/wiki/List_of_best-selling_books#List_of_best-selling_individual_books"
+
+book_html <- xml2::read_html(book_wiki_page)
+
+```
+
+`read_html` just reads in the page, once we have page saved, we need to tell it where to look. 
+This peice of code, tells it to find all the tables. 
+
+```{r}
+all_tables <- book_html %>% 
+  html_nodes(css = "table.wikitable.sortable" ) 
+all_tables
+```
+
+we now have a list, containing all the tables on the webpage, we want to turn all these individual tables into nice dataframe, and then combine all those 15 dataframes in to a master dataframe with all the information in it. `map_dfr` applied `parse_table` to each tables and then sticks them all together. This is a great examples of the simplicity of working in a vectorised way, rather than in a messy loop. 
+
+```{r}
+parse_table <- function(x) {
+  html_table(x,fill=T) %>%
+    as_tibble() %>% 
+    mutate(across( everything(),as.character ) )
+}
+
+combined_table <- map_dfr(all_tables,parse_table)
+```
+
+Now, as is often the case with scraped data, this is far from clean. We have a `No. of installments` and a `No. of instalments` column. Lets merge them into one.
+
+```{r}
+combined_table <- combined_table %>% 
+  mutate(`No. of installments` = coalesce(`No. of installments`,`No. of instalments`)) %>% 
+  select(-`No. of instalments`)
+```
+
+
+The `Approximate sales` is very messy, and it the column we are most concerned about, to lets take care to make sure we extract all the data.  
+
+```{r}
+combined_table <- combined_table %>%
+  mutate(
+    `Approximate sales_clean` = str_remove(`Approximate sales`, '(\\[\\d+\\])+'),
+    `Approximate sales_numb` = str_extract(`Approximate sales`, '[\\d,\\.]+'),
+    `Approximate sales_multiplier` = if_else(
+      str_detect(`Approximate sales`, 'million'),
+      10 **6,1),
+    `Approximate sales_numb` = str_remove_all(`Approximate sales_numb`,','),
+    `Approximate sales_numb` = as.double(`Approximate sales_numb`),
+      `Approximate sales_dbl` = `Approximate sales_numb` * `Approximate sales_multiplier`) %>% 
+  select( -`Approximate sales_clean`,- `Approximate sales_numb`, -`Approximate sales_multiplier`)
+```
+
+
+Now we've cleaned our master tables, some are series, some are individual books.
+
+```{r}
+book_series_table <- combined_table %>%
+  filter(!is.na(`Book series`)) %>% 
+  select(-Book) %>% select( `Book series`,everything())
+
+book_table <- combined_table %>% 
+  filter(!is.na(Book)) %>% 
+  select(-`Book series`,-`No. of installments`)
+```
+
+One last cleanup on the books table
+```{r}
+book_table <- book_table %>% 
+  mutate(
+    `First published_cleaned` = case_when(
+      `First published` == '18th century' ~ '1800', 
+      TRUE ~ `First published`),
+    `First published_cleaned` = str_extract(`First published_cleaned`,'\\d+'),
+    `First published_cleaned` = lubridate::as_date(paste0(`First published_cleaned`,"-01-01") ) )
+```
+
+
+
+
+
