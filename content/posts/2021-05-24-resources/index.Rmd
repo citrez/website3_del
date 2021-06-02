@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE)
 <p style="text-align: center;">Here is a collection of things that I love to use.
 I hope to update this regularly</p>
 
-
+ 
 
 ## R and packages
 - [R for Data Science](https://r4ds.had.co.nz/) for me is the definitive guide to Data Science in R and can help you think about data problems. It is both highly approachable and will really get you quite far along with your data needs. 
