@@ -79,8 +79,21 @@ I hope to update this regularly</p>
 
 - [SkimR](https://cran.r-project.org/web/packages/skimr/vignettes/skimr.html) - provide summary statistics about variables in data frames
 
+## Data Packages
+What is data analysis without data
+
+- tidyquant
+- WDI
+- newsanchor
+- gtrendsR
+
+
 
 ## Pictures speak louder than definitions
 
 k fold cross validation
 ![](/post_resources/kf-cv.png)
+
+Accuracy interpretability *trade-off*
+![](/post_resources/accuracy_interpret.png)
+
