@@ -9,11 +9,8 @@ description: ~
 #featured_image: "/post_tidymodels/tidymodels.jpeg"
 --- 
 To write on linkedin post 
-(I'm really exited to share my first ever blog post on my newly built websites - yes, lots of firsts!
-
-I Initially started the project of learning how to build a website during lockdown, as a way of keeping busy during those long self-issolated evenings. But quickly found that I really enjoyed the process. There are loads of great reason to write a blog, like providing motivation to learn new things or to help improve of written communication.
-
-I've chosen to write my first ever blog on two of my big interests, machine learning and R. If you work in R but have always used python for your ML, i'd encourage to give tidymodels a try. Simply, it provides a consistent framework for building models, using tidy data principles, all within the comfort of Rstudio.
+I'm really exited to launch my new blogging site and share my first post.
+If you're interested in ML and at least some of your workflow is in R . If you work in R but have always used python for your ML, i'd encourage to give tidymodels a try. Simply, it provides a consistent framework for building models, using tidy data principles, all within the comfort of Rstudio.
 
 The source code for my site can be found on my github) 
 
@@ -31,7 +28,7 @@ Lets meet the tidymodels packages.
 
 ```{r setup, include =F,echo=F}
 
-knitr::opts_chunk$set(echo = TRUE,message = F,warning = F )
+knitr::opts_chunk$set(echo = TRUE,message = F,warning = F,cache = T )
 ```
 
 
@@ -107,7 +104,7 @@ iris_recipe_prepped <-  prep(iris_recipe)
 The unprepper recipie is the general blueprint for preprocessing. 'prepping' it, preforms the preprocessing with the training set. So for example, It will use the trianing set to decide which variables in needs to drop through the `step_corr()` step. See the differnce in outputs between `iris_recipe` and `iris_recipe_prepped` for the general and specific case.
 
 
-*Remeber* the test set must be transformed using the exact same pre-processing 'learned' from the training set. I.e if the step_corr() removed `Petal.Length` column from the data, this must be removed from test data, even if the correlation did not meet the threshold in the test set. Another example, the training set was centered and scaled by subtracting the mean of each column and deivding by the standard deviation. The **test set** is scaled using the **traiing set** mean and standard deviation. 
+*Remeber* the test set must be transformed using the exact same pre-processing 'learned' from the training set. I.e if the step_corr() removed `Petal.Length` column from the data, this must be removed from test data, even if the correlation did not meet the threshold in the test set. Another example, the training set was centered and scaled by subtracting the mean of each column and deivding by the standard deviation. The **test set** is scaled using the **training set** mean and standard deviation. 
 
 So we `bake()` our test set using the recipe prepped on the traiing set
 
@@ -127,7 +124,7 @@ iris_train_juiced<- juice(iris_recipe_prepped)
 There are often many different packages that fit the same type of model, with each one having slightly different interface and terminology. The beauty of tidymodels is that it provides a consistent set of functions and augments and then allows you to pick which package to use 'behind the scenes'.
 
 To make the concrete, training a random forest can be done with `ranger` and `randomForst` packages. 
-To set the hyperparameter for the number of trees you want to build ranger uses `nu.trees` randomForest uses `ntree`. Tidymodels eliminates this unnecessary complication, making it much simpler to switch between models. 
+To set the hyperparameter for the number of trees you want to build ranger uses `nu.trees` randomForest uses `ntree`. Tidymodels eliminates this unnecessary complication, making it much simpler to switch between models. You can find a full list of models that tidymodels offer [here](https://www.tidymodels.org/find/parsnip/)
 
 ```{r}
 iris_rf <- rand_forest(trees = 150, mode = 'classification') %>% 

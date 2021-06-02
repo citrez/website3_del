@@ -3,31 +3,31 @@ title: Do Popular Books Become Popular Films?
 author: Ezra Citron
 date: '2021-05-30'
 slug: []
-categories: []
+categories: ['webscraping']
 tags: []
 description: ~
 featured_image: ~
 draft: true
 ---
 
-I was watching one of the Harry Potter films for the umtenth time, wondering how such a mediocre films went on to be such huge box office hits. The answer is obvious, the books were hugely popular, and there are hundreds of millions of loyal fans who would watch the film regardless of the quality of the films. So, i thought, in general will a popular book always do well when converted to a film, what are the exceptions? Could I use book sales as a predictor of box office success?
+I was watching one of the Harry Potter films for the umpteenth time, wondering how such a mediocre film went on to be such huge box office hit. The answer is obvious, the books were hugely popular, and there are hundreds of millions of loyal fans who would watch the film regardless of the quality. In general though, will a popular book always do well when converted to a film. What is the relationship like between books sales and box office success and which films are the exceptionss? To what extent can i use book sales as a predictor of box office success?
 
-First things first, lets collect some data. A great oppertunity to try out the webscraping package in R, rvest (a play on words of harvest, as in, harvesting data... ha ha). 
+First things first, lets collect some data.
+We need information on book sales and gross movie sales. 
+
 ```{r setup}
-knitr::opts_chunk$set(echo = TRUE,message = F,warning = F )
+knitr::opts_chunk$set(echo = TRUE,message = F,warning = F,cache = T )
 ```
 
 
 ```{r load_packages}
 library(tidyverse)
 library(rvest)
-
 ```
 
-wikipdepa often has great tables with this type of infoformation. Check out the link to see all of the tables they have on book sales, and the data we are going to scrape. 
-
+Wikipedia often has great tables with this type of information. I'm going to scrape all the book sales data I need from [this]() wiki page.
 ![](/post_popular_books/wiki.png)
-however, there are over 300 rows of book data, so its too much to copy out manually, or even copy and paste, so we'll use rvest to scrape the tables. 
+I want to use all this book sales data for my analysis, however, there are over 300 rows, its too much to copy out manually, or even copy and paste. This is a great opportunity to try out rvest, R's webscraping package. 
 
 
 ```{r}
@@ -35,11 +35,12 @@ book_wiki_page <-
   "https://en.wikipedia.org/wiki/List_of_best-selling_books#List_of_best-selling_individual_books"
 
 book_html <- xml2::read_html(book_wiki_page)
-
 ```
 
-`read_html` just reads in the page, once we have page saved, we need to tell it where to look. 
-This peice of code, tells it to find all the tables. 
+It's hard to get very far in webscraping without at least a very basic understanding of
+the language which deicde how things are styled and layed out on a webpage (HTML and CSS).
+
+This peice of code tells the computer where to look in the webpage to get the table data we're looking for. 
 
 ```{r}
 all_tables <- book_html %>% 
@@ -47,19 +48,19 @@ all_tables <- book_html %>%
 all_tables
 ```
 
-we now have a list, containing all the tables on the webpage, we want to turn all these individual tables into nice dataframe, and then combine all those 15 dataframes in to a master dataframe with all the information in it. `map_dfr` applied `parse_table` to each tables and then sticks them all together. This is a great examples of the simplicity of working in a vectorised way, rather than in a messy loop. 
+We now have a list, containing all the tables on the webpage, we want to turn all these individual tables into nice dataframe, and then combine all those 15 dataframes in to a master dataframe with all the information in it. `map_dfr` applied `parse_table` to each tables and then sticks them all together. 
 
 ```{r}
 parse_table <- function(x) {
   html_table(x,fill=T) %>%
     as_tibble() %>% 
-    mutate(across( everything(),as.character ) )
+    mutate(across( everything(), as.character ) )
 }
 
 combined_table <- map_dfr(all_tables,parse_table)
 ```
 
-Now, as is often the case with scraped data, this is far from clean. We have a `No. of installments` and a `No. of instalments` column. Lets merge them into one.
+As is often the case with scraped data, this is far from clean. We have a `No. of installments` and a `No. of instalments` column. Lets merge them into one.
 
 ```{r}
 combined_table <- combined_table %>% 

@@ -93,3 +93,7 @@ What is data analysis without data
 
 k fold cross validation
 ![](/post_resources/kf-cv.png)
+
+Accuracy interpretability *trade-off*
+![](/post_resources/accuracy_interpret.png)
+

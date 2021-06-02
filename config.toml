@@ -41,7 +41,7 @@ disqusShortname = "yourdiscussshortname"
     
       [[menu.main]]
     name = "Resources"
-    url = "/resources"
+    url = "/resources.html"
     weight = 4
 
 [params]
@@ -60,10 +60,10 @@ disqusShortname = "yourdiscussshortname"
     avatar = "/images/avatar.png" #comment it to use gravatar
     socialShare = true
 
-    description = "" # site description
+    description = "personal blog" # site description
     
 
-    keywords = "" # site keywords
+    keywords = "blog" # site keywords
 
     license= 'Released under <a rel="license external nofollow noopener noreffer" href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank">CC BY-NC 4.0</a>'
 
