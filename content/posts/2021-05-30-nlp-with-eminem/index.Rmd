@@ -1,11 +1,147 @@
 ---
-title: NLP with Eminem
+title: Text Analysis with Eminem
 author: Ezra Citron
 date: '2021-05-30'
 slug: []
-categories: []
+categories: ['topic modeling','NLP']
 tags: []
 description: ~
 featured_image: ~
 draft: true
 ---
+For a while I thought it'd be fun to apply natural language processing (NLP) techniques on artists lyrics - and see what it comes up with, whether the analysis chimes with our experience of listening to the artist.
+
+Picking a rapper would be a good choice, purely because they give us more words than other artists. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,cache = T)
+```
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+lyrics_raw <- read_csv('static/data/lyrics.csv')
+```
+ First a little data cleaning to get the year the album was released, using some regex magic. 
+ 
+```{r }
+lyrics <- lyrics_raw %>% 
+  mutate(year = str_extract(album,"(?<=\\()\\d+(?=\\))"), #get the year from album
+         album = str_remove(album," \\(\\d+\\)")) # remove the year from album
+
+lyrics %>% count(album)
+```
+
+make a feature of earlier/ later albums
+```{r feature_engineering}
+
+lyrics <- lyrics %>% 
+  mutate(age = if_else(year < 2015,'Older','Newer') )
+
+```
+
+How are Eminems later works different
+
+```{r}
+lyrics %>% 
+  distinct(.keep_all = T,album) %>% 
+  group_by(year) %>% 
+  summarise( albums =paste(album,collapse = '   ')) %>% 
+  ggplot(aes(y = as.Date(paste0(year,'-01-01') ),
+             x = 0.01))+
+  geom_rect(fill = 'green',
+            aes(xmin = 0,xmax = 1.,
+                ymin = as.Date('1995-01-01'),
+                ymax = as.Date('2015-06-01')))+
+    geom_rect(fill = 'red',
+            aes(xmin = 0,xmax = 1.,
+                ymin = as.Date('2015-06-01'),
+                ymax = as.Date('2021-01-01')))+
+  geom_text(aes(label = albums),hjust = 0,size = 5)+
+  labs(y = 'Date')+
+  scale_y_date(name = NULL,date_breaks = '5 year', 
+               limits = c( as.Date('1995-01-01'),
+                           as.Date('2021-01-01') ),
+               date_labels = "%Y",expand = c(0,0))+
+  scale_x_continuous(name = NULL,expand = c(0,0))+
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.ticks.length.y = unit(4,'mm'))
+```
+
+ 
+## Topic Modeling
+ 
+```{r}
+
+library(stm)
+library(quanteda)
+library(tidytext)
+lyrics_tokenised <- lyrics %>% 
+  unnest_tokens(output = 'word',input = lyrics,token = 'words')
+
+custom_stop_words <- tidytext::stop_words
+
+lyrics_tokenised <- lyrics_tokenised %>% 
+  anti_join(custom_stop_words,by = 'word')
+
+# top words used
+lyrics_tokenised %>% 
+  count(word,sort=T) %>% 
+  slice_head(n=20) %>% 
+  mutate(word = fct_reorder(word,.x = n)) %>% 
+  ggplot(aes(n,word,fill = n))+
+  geom_col(show.legend = F)
+
+# top words by album
+
+lyrics_tokenised %>% 
+  count(album,word,sort=T) %>% 
+  group_by(album) %>% 
+  slice_head(n=5) %>%
+  ungroup() %>% 
+  mutate(word = fct_reorder(word,.x = n)) %>% 
+  ggplot(aes(n,word,fill = n))+
+  geom_col(show.legend = F)+
+  facet_wrap(vars(album),scales = 'free',ncol = 3)
+
+```
+ 
+ 
+## TF-IDF Between Albums
+ TF-IDF is term frequency inverse document frequency. This translates to, "Does a word come up in this album significantly more than in comes up in others". The word "The" for example, will probably come up a lot in the album infinite, however, it'll come up a lot in the rest of the albums too, so won't have a high TF-IDF. However, **give an example**
+ 
+ ## Sentiment over time
+ 
+ 
+## predictive modelling for older and newer albums
+
+```{r}
+library(textfeatures)
+
+lyrics_featues <- textfeatures::textfeatures(lyrics$lyrics)
+lyrics <- lyrics %>% bind_cols(lyrics_featues) 
+
+```
+
+
+```{r}
+library(tidymodels)
+
+set.seed(123)
+lyrics_split <- rsample::initial_split(lyrics,strata = age)
+
+lyrics_train <- training(lyrics_split)
+lyrics_test <- testing(lyrics_split)
+
+```
+
+```{r recipe}
+
+recipe(lyrics_train, age ~ . ) %>% 
+  recipes::step
+
+```
+

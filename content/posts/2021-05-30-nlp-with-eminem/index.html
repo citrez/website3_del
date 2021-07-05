@@ -1,9 +1,9 @@
 ---
-title: NLP with Eminem
+title: Text Analysis with Eminem
 author: Ezra Citron
 date: '2021-05-30'
 slug: []
-categories: []
+categories: ['topic modeling','NLP']
 tags: []
 description: ~
 featured_image: ~
@@ -12,4 +12,20 @@ draft: true
 
 
 
-
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>## ✓ ggplot2 3.3.3     ✓ purrr   0.3.4
+## ✓ tibble  3.1.0     ✓ dplyr   1.0.4
+## ✓ tidyr   1.1.2     ✓ stringr 1.4.0
+## ✓ readr   1.4.0     ✓ forcats 0.5.1</code></pre>
+<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>lyrics &lt;- read_csv(&#39;lyrics.csv&#39;)</code></pre>
+<pre><code>## 
+## ── Column specification ────────────────────────────────────────────────────────
+## cols(
+##   lyrics = col_character(),
+##   song = col_character(),
+##   album = col_character()
+## )</code></pre>
