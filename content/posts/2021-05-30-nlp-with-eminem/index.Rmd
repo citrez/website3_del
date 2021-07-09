@@ -1,5 +1,5 @@
 ---
-title: Text Analysis with Eminem
+title: Predictive Modeling with NLP
 author: Ezra Citron
 date: '2021-05-30'
 slug: []
@@ -13,8 +13,13 @@ For a while I thought it'd be fun to apply natural language processing (NLP) tec
 
 Picking a rapper would be a good choice, purely because they give us more words than other artists. 
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,cache = T)
+I'm going to split this out into a 5 series of blog posts, each focusing on different aspects of NLP.
+- Predictive modeling with NLP
+- Network structure 
+- Topic analysis with NLP
+
+```{r setup, echo = F}
+knitr::opts_chunk$set(echo = FALSE,cache = T,warning = F,error = F, message = F)
 ```
 
 ```{r}
@@ -22,20 +27,23 @@ library(tidyverse)
 ```
 
 ```{r}
-lyrics_raw <- read_csv('static/data/lyrics.csv')
+lyrics_raw <- read_csv('lyrics.csv')
 ```
- First a little data cleaning to get the year the album was released, using some regex magic. 
  
-```{r }
+```{r}
 lyrics <- lyrics_raw %>% 
   mutate(year = str_extract(album,"(?<=\\()\\d+(?=\\))"), #get the year from album
          album = str_remove(album," \\(\\d+\\)")) # remove the year from album
 
-lyrics %>% count(album)
 ```
 
+```{r}
+lyrics
+```
+
+
 make a feature of earlier/ later albums
-```{r feature_engineering}
+```{r feature_engineering, echo =T}
 
 lyrics <- lyrics %>% 
   mutate(age = if_else(year < 2015,'Older','Newer') )
@@ -45,17 +53,20 @@ lyrics <- lyrics %>%
 How are Eminems later works different
 
 ```{r}
+
+colour_pal <- RColorBrewer::brewer.pal(n = 3,name = 'Pastel1')
+
 lyrics %>% 
   distinct(.keep_all = T,album) %>% 
   group_by(year) %>% 
   summarise( albums =paste(album,collapse = '   ')) %>% 
   ggplot(aes(y = as.Date(paste0(year,'-01-01') ),
              x = 0.01))+
-  geom_rect(fill = 'green',
+  geom_rect(fill =colour_pal[1],
             aes(xmin = 0,xmax = 1.,
                 ymin = as.Date('1995-01-01'),
                 ymax = as.Date('2015-06-01')))+
-    geom_rect(fill = 'red',
+    geom_rect(fill = colour_pal[3],
             aes(xmin = 0,xmax = 1.,
                 ymin = as.Date('2015-06-01'),
                 ymax = as.Date('2021-01-01')))+
@@ -72,7 +83,7 @@ lyrics %>%
 ```
 
  
-## Topic Modeling
+## Topic Modeling 
  
 ```{r}
 
@@ -140,8 +151,8 @@ lyrics_test <- testing(lyrics_split)
 
 ```{r recipe}
 
-recipe(lyrics_train, age ~ . ) %>% 
-  recipes::step
+#recipe(lyrics_train, age ~ . ) %>% 
+#  recipes::step
 
 ```
 

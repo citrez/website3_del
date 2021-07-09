@@ -1,76 +1,71 @@
 ---
-title: Do Popular Books Become Popular Films?
+title: Do Popular Books Become Popular Films? Part 1
 author: Ezra Citron
 date: '2021-05-30'
 slug: []
 categories: ['webscraping']
 tags: []
 description: ~
-featured_image: ~
+featured_image: harry_potter.jpeg
 draft: true
+
 ---
 
 
 
-<p>I was watching one of the Harry Potter films for the umpteenth time, wondering how such a mediocre film went on to be such huge box office hit. The answer is obvious, the books were hugely popular, and there are hundreds of millions of loyal fans who would watch the film regardless of the quality. In general though, will a popular book always do well when converted to a film. What is the relationship like between books sales and box office success and which films are the exceptionss? To what extent can i use book sales as a predictor of box office success?</p>
+<p>I was watching one of the Harry Potter films for the umpteenth time, wondering how such a mediocre film went on to be such huge box office hit. The answer is obvious, the books were hugely popular, and there are hundreds of millions of loyal fans who would watch the film regardless of the quality.
+Let me to ask though, in general though, will a popular book always do well when converted to a film. What is the relationship like between books sales and box office success and which films are the exceptions? To what extent can I use book sales as a predictor of box office success?</p>
 <p>First things first, lets collect some data.
 We need information on book sales and gross movie sales.</p>
-<pre class="r"><code>knitr::opts_chunk$set(echo = TRUE,message = F,warning = F,cache = T )</code></pre>
 <pre class="r"><code>library(tidyverse)
 library(rvest)</code></pre>
-<p>Wikipedia often has great tables with this type of information. I’m going to scrape all the book sales data I need from <a href="">this</a> wiki page.
-<img src="/post_popular_books/wiki.png" />
+<p><img align="right" width="1000" height="500" src="wiki.png" >
+Wikipedia often has great tables with this type of information. I’m going to scrape all the book sales data I need from <a href="https://en.wikipedia.org/wiki/List_of_best-selling_books">this</a> wiki page.</p>
+<p><br>
+<br>
+<br>
 I want to use all this book sales data for my analysis, however, there are over 300 rows, its too much to copy out manually, or even copy and paste. This is a great opportunity to try out rvest, R’s webscraping package.</p>
-<pre class="r"><code>book_wiki_page &lt;- 
-  &quot;https://en.wikipedia.org/wiki/List_of_best-selling_books#List_of_best-selling_individual_books&quot;
+<pre class="r"><code>book_wiki_page &lt;- &quot;https://en.wikipedia.org/wiki/List_of_best-selling_books#List_of_best-selling_individual_books&quot;
 
 book_html &lt;- xml2::read_html(book_wiki_page)</code></pre>
-<p>It’s hard to get very far in webscraping without at least a very basic understanding of the language which dictaters how things are layed out on a webpage (HTML) and the language which decides how things are styled (CSS). Loosely, html is much like documents you’ve written in word or powerpoint, with one big difference</p>
-<p><code>read_html</code> just reads in the page, once we have page saved, we need to tell it where to look.
-This peice of code, tells it to find all the tables.</p>
+<p>It’s hard to get very far in webscraping without at least a very basic understanding of
+the language which determines how things are styled and laid out on a webpage (HTML and CSS).</p>
 <pre class="r"><code>all_tables &lt;- book_html %&gt;% 
-  html_nodes(css = &quot;table.wikitable.sortable&quot; ) 
-all_tables</code></pre>
-<pre><code>## {xml_nodeset (15)}
-##  [1] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
-##  [2] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
-##  [3] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
-##  [4] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
-##  [5] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
-##  [6] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book series&lt;/th&gt;\n&lt; ...
-##  [7] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book series&lt;/th&gt;\n&lt; ...
-##  [8] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book series&lt;/th&gt;\n&lt; ...
-##  [9] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book series&lt;/th&gt;\n&lt; ...
-## [10] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book series&lt;/th&gt;\n&lt; ...
-## [11] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
-## [12] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
-## [13] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
-## [14] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...
-## [15] &lt;table class=&quot;wikitable sortable&quot;&gt;&lt;tbody&gt;\n&lt;tr&gt;\n&lt;th&gt;Book&lt;/th&gt;\n&lt;th&gt;Auth ...</code></pre>
-<p>we now have a list, containing all the tables on the webpage, we want to turn all these individual tables into nice dataframe, and then combine all those 15 dataframes in to a master dataframe with all the information in it. <code>map_dfr</code> applied <code>parse_table</code> to each tables and then sticks them all together. This is a great examples of the simplicity of working in a vectorised way, rather than in a messy loop.</p>
+  html_nodes(css = &quot;table.wikitable.sortable&quot; ) </code></pre>
+<p>This piece of code tells the computer where to look in the webpage to get the table data we’re looking for.</p>
+<p>We now have a list, containing all the tables on the webpage, we want to turn all these individual tables into nice dataframes, and then combine all those 15 dataframes in to a master dataframe with all the information in it.
+This is a perfect use case for functional programming using <code>purrr</code>.</p>
 <pre class="r"><code>parse_table &lt;- function(x) {
   html_table(x,fill=T) %&gt;%
     as_tibble() %&gt;% 
-    mutate(across( everything(),as.character ) )
+    mutate(across( everything(), as.character ) )
 }
 
 combined_table &lt;- map_dfr(all_tables,parse_table)</code></pre>
-<p>Now, as is often the case with scraped data, this is far from clean. We have a <code>No. of installments</code> and a <code>No. of instalments</code> column. Lets merge them into one.</p>
+<p>Here I use <code>map_dfr</code> to apply <code>parse_table</code> to each tables in the list and sticks all the output together.</p>
+<p>As is often the case with scraped data, this is far from clean. We have a <code>No. of installments</code> and a <code>No. of instalments</code> column. Lets merge them into one.</p>
 <pre class="r"><code>combined_table &lt;- combined_table %&gt;% 
   mutate(`No. of installments` = coalesce(`No. of installments`,`No. of instalments`)) %&gt;% 
   select(-`No. of instalments`)</code></pre>
 <p>The <code>Approximate sales</code> is very messy, and it the column we are most concerned about, to lets take care to make sure we extract all the data.</p>
-<pre class="r"><code>combined_table &lt;- combined_table %&gt;%
-  mutate(
-    `Approximate sales_clean` = str_remove(`Approximate sales`, &#39;(\\[\\d+\\])+&#39;),
-    `Approximate sales_numb` = str_extract(`Approximate sales`, &#39;[\\d,\\.]+&#39;),
-    `Approximate sales_multiplier` = if_else(
-      str_detect(`Approximate sales`, &#39;million&#39;),
-      10 **6,1),
-    `Approximate sales_numb` = str_remove_all(`Approximate sales_numb`,&#39;,&#39;),
-    `Approximate sales_numb` = as.double(`Approximate sales_numb`),
-      `Approximate sales_dbl` = `Approximate sales_numb` * `Approximate sales_multiplier`) %&gt;% 
-  select( -`Approximate sales_clean`,- `Approximate sales_numb`, -`Approximate sales_multiplier`)</code></pre>
+<pre class="r"><code>clean_approximate_sales_col &lt;- function(df) {
+  df %&gt;%
+    mutate(
+      `Approximate sales_clean` = str_remove(`Approximate sales`, &#39;(\\[\\d+\\])+&#39;),
+      `Approximate sales_numb` = str_extract(`Approximate sales`, &#39;[\\d,\\.]+&#39;),
+      `Approximate sales_multiplier` = if_else(str_detect(`Approximate sales`, &#39;million&#39;),
+                                               10 ** 6, 1),
+      `Approximate sales_numb` = str_remove_all(`Approximate sales_numb`, &#39;,&#39;),
+      `Approximate sales_numb` = as.double(`Approximate sales_numb`),
+      `Approximate sales_dbl` = `Approximate sales_numb` * `Approximate sales_multiplier`
+    ) %&gt;%
+    select(
+      -`Approximate sales_clean`,
+      -`Approximate sales_numb`,
+      -`Approximate sales_multiplier`
+    )
+}
+combined_table &lt;- combined_table %&gt;%clean_approximate_sales_col()</code></pre>
 <p>Now we’ve cleaned our master tables, some are series, some are individual books.</p>
 <pre class="r"><code>book_series_table &lt;- combined_table %&gt;%
   filter(!is.na(`Book series`)) %&gt;% 
@@ -80,10 +75,38 @@ book_table &lt;- combined_table %&gt;%
   filter(!is.na(Book)) %&gt;% 
   select(-`Book series`,-`No. of installments`)</code></pre>
 <p>One last cleanup on the books table</p>
-<pre class="r"><code>book_table &lt;- book_table %&gt;% 
-  mutate(
-    `First published_cleaned` = case_when(
-      `First published` == &#39;18th century&#39; ~ &#39;1800&#39;, 
-      TRUE ~ `First published`),
-    `First published_cleaned` = str_extract(`First published_cleaned`,&#39;\\d+&#39;),
-    `First published_cleaned` = lubridate::as_date(paste0(`First published_cleaned`,&quot;-01-01&quot;) ) )</code></pre>
+<p>This is our books table</p>
+<pre class="r"><code>book_series_table</code></pre>
+<pre><code>## # A tibble: 120 x 8
+##    `Book series`  `Author(s)` `Original langu… `First publishe… `Approximate sa…
+##    &lt;chr&gt;          &lt;chr&gt;       &lt;chr&gt;            &lt;chr&gt;            &lt;chr&gt;           
+##  1 Harry Potter   J. K. Rowl… English          1997–present     500 million[8][…
+##  2 Goosebumps     R. L. Stine English          1992–present     350 million[175]
+##  3 Perry Mason    Erle Stanl… English          1933–1973        300 million[176]
+##  4 Berenstain Be… Stan and J… English          1962–present     260 million[177]
+##  5 Choose Your O… Various au… English          1979–1998        250 million[178]
+##  6 Diary of a Wi… Jeff Kinney English          2007–present     250 million[179]
+##  7 Sweet Valley … Francine P… English          1983–2003        250 million[180]
+##  8 Noddy          Enid Blyton English          1949–present     200 million[181]
+##  9 Nancy Drew     Various au… English          1930–present     200 million[182]
+## 10 The Railway S… Rev. W. Aw… English          1945–2011        200 million[183]
+## # … with 110 more rows, and 3 more variables: Genre &lt;chr&gt;,
+## #   No. of installments &lt;chr&gt;, Approximate sales_dbl &lt;dbl&gt;</code></pre>
+<p>This is our series table</p>
+<pre class="r"><code>book_series_table</code></pre>
+<pre><code>## # A tibble: 120 x 8
+##    `Book series`  `Author(s)` `Original langu… `First publishe… `Approximate sa…
+##    &lt;chr&gt;          &lt;chr&gt;       &lt;chr&gt;            &lt;chr&gt;            &lt;chr&gt;           
+##  1 Harry Potter   J. K. Rowl… English          1997–present     500 million[8][…
+##  2 Goosebumps     R. L. Stine English          1992–present     350 million[175]
+##  3 Perry Mason    Erle Stanl… English          1933–1973        300 million[176]
+##  4 Berenstain Be… Stan and J… English          1962–present     260 million[177]
+##  5 Choose Your O… Various au… English          1979–1998        250 million[178]
+##  6 Diary of a Wi… Jeff Kinney English          2007–present     250 million[179]
+##  7 Sweet Valley … Francine P… English          1983–2003        250 million[180]
+##  8 Noddy          Enid Blyton English          1949–present     200 million[181]
+##  9 Nancy Drew     Various au… English          1930–present     200 million[182]
+## 10 The Railway S… Rev. W. Aw… English          1945–2011        200 million[183]
+## # … with 110 more rows, and 3 more variables: Genre &lt;chr&gt;,
+## #   No. of installments &lt;chr&gt;, Approximate sales_dbl &lt;dbl&gt;</code></pre>
+<p>I followed a similar process to get data for the top grossing films.</p>

@@ -1,5 +1,5 @@
 ---
-title: Text Analysis with Eminem
+title: Predictive Modeling with NLP
 author: Ezra Citron
 date: '2021-05-30'
 slug: []
@@ -12,20 +12,46 @@ draft: true
 
 
 
-<pre class="r"><code>library(tidyverse)</code></pre>
-<pre><code>## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
-<pre><code>## ✓ ggplot2 3.3.3     ✓ purrr   0.3.4
-## ✓ tibble  3.1.0     ✓ dplyr   1.0.4
-## ✓ tidyr   1.1.2     ✓ stringr 1.4.0
-## ✓ readr   1.4.0     ✓ forcats 0.5.1</code></pre>
-<pre><code>## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-## x dplyr::filter() masks stats::filter()
-## x dplyr::lag()    masks stats::lag()</code></pre>
-<pre class="r"><code>lyrics &lt;- read_csv(&#39;lyrics.csv&#39;)</code></pre>
-<pre><code>## 
-## ── Column specification ────────────────────────────────────────────────────────
-## cols(
-##   lyrics = col_character(),
-##   song = col_character(),
-##   album = col_character()
-## )</code></pre>
+<p>For a while I thought it’d be fun to apply natural language processing (NLP) techniques on artists lyrics - and see what it comes up with, whether the analysis chimes with our experience of listening to the artist.</p>
+<p>Picking a rapper would be a good choice, purely because they give us more words than other artists.</p>
+<p>I’m going to split this out into a 5 series of blog posts, each focusing on different aspects of NLP.
+- Predictive modeling with NLP
+- Network structure
+- Topic analysis with NLP</p>
+<pre><code>## # A tibble: 304 x 4
+##    lyrics                                               song        album  year 
+##    &lt;chr&gt;                                                &lt;chr&gt;       &lt;chr&gt;  &lt;chr&gt;
+##  1 &quot;Aw, yeah (It&#39;s like this, like this) It&#39;s Eminem b… Infinite    Infin… 1996 
+##  2 &quot;Yeah, soul intent, checking in number one, baby th… WEGO Inter… Infin… 1996 
+##  3 &quot;Check it out Hey Kyu! It&#39;s a broke day but everyth… Its Ok      Infin… 1996 
+##  4 &quot;Now what you know about a sweet MC, from the 313 N… 313         Infin… 1996 
+##  5 &quot;Tonight, tonight, tonight, tonight, tonight I&#39;m ge… Tonight     Infin… 1996 
+##  6 &quot;Maxine! Hello Can I speak to Maxine? Yeah, this is… Maxine      Infin… 1996 
+##  7 &quot;Hey yo, what&#39;s up, man? Hey yo, you been here all … Open Mic    Infin… 1996 
+##  8 &quot;Denaun, what up, man? What up, dawg? You all right… Never 2 Far Infin… 1996 
+##  9 &quot;[Angela Workman:] Ain&#39;t no one special, special li… Searchin    Infin… 1996 
+## 10 &quot;Attention all units, attention all units We have a… Backstabber Infin… 1996 
+## # … with 294 more rows</code></pre>
+<p>make a feature of earlier/ later albums</p>
+<pre class="r"><code>lyrics &lt;- lyrics %&gt;% 
+  mutate(age = if_else(year &lt; 2015,&#39;Older&#39;,&#39;Newer&#39;) )</code></pre>
+<p>How are Eminems later works different</p>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<div id="topic-modeling" class="section level2">
+<h2>Topic Modeling</h2>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-6-1.png" width="672" /><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-6-2.png" width="672" /></p>
+</div>
+<div id="tf-idf-between-albums" class="section level2">
+<h2>TF-IDF Between Albums</h2>
+<p>TF-IDF is term frequency inverse document frequency. This translates to, “Does a word come up in this album significantly more than in comes up in others”. The word “The” for example, will probably come up a lot in the album infinite, however, it’ll come up a lot in the rest of the albums too, so won’t have a high TF-IDF. However, <strong>give an example</strong></p>
+<p>## Sentiment over time</p>
+</div>
+<div id="predictive-modelling-for-older-and-newer-albums" class="section level2">
+<h2>predictive modelling for older and newer albums</h2>
+<pre><code>## [32m↪[39m [38;5;244mCounting features in text...[39m
+## [32m↪[39m [38;5;244mSentiment analysis...[39m
+## [32m↪[39m [38;5;244mParts of speech...[39m
+## [32m↪[39m [38;5;244mWord dimensions started[39m
+## [32m↪[39m [38;5;244mNormalizing data[39m
+## [32m✔[39m Job&#39;s done!</code></pre>
+</div>

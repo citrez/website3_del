@@ -38,10 +38,10 @@ disqusShortname = "yourdiscussshortname"
     name = "About"
     url = "/about"
     weight = 4
-    
+
       [[menu.main]]
     name = "Resources"
-    url = "/resources"
+    url = "/2021/2021-05-24-resources/"
     weight = 4
 
 [params]
@@ -61,7 +61,7 @@ disqusShortname = "yourdiscussshortname"
     socialShare = true
 
     description = "personal blog" # site description
-    
+
 
     keywords = "blog" # site keywords
 
@@ -72,7 +72,7 @@ disqusShortname = "yourdiscussshortname"
   category = "categories"
   publication_type = "publication_types"
   author = "authors"
-  
+
 [params.gravatar]
   #email = "ezracitron@gmail.com"   #uncomment and insert your email address to use gravatar
 
