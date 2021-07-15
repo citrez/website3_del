@@ -39,9 +39,9 @@ disqusShortname = "yourdiscussshortname"
     url = "/about"
     weight = 4
 
-      [[menu.main]]
+  [[menu.main]]
     name = "Resources"
-    url = "about_2"
+    url = "/about_2"
     weight = 4
 
 [params]
