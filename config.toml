@@ -41,7 +41,7 @@ disqusShortname = "yourdiscussshortname"
 
       [[menu.main]]
     name = "Resources"
-    url = "/2021/2021-05-24-resources/"
+    url = "/resources"
     weight = 4
 
 [params]
