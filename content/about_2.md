@@ -24,9 +24,9 @@ I hope to update this regularly</p>
 
 - [Alison Hill](https://alison.rbind.io/projects/) is a recent find and an absoloute teasure strove of information.
 
-[Cedric Scherer](https://www.cedricscherer.com/), what a man, what a blog.
+- [Cedric Scherer](https://www.cedricscherer.com/), what a man, what a blog.
 
-- Julia Silge has an incredible youtube channel, taking you through all things tidymodeling. Super useful resource, if, like me, you'd like a framework to rival scikit-learn that will keep you safely within the confines of Rstudio. She also has a [blog](https://juliasilge.com/)
+- Julia Silge has an incredible Youtube channel, taking you through all things tidymodeling. Super useful resource, if, like me, you'd like a framework to rival scikit-learn that will keep you safely within the confines of Rstudio. She also has a [blog](https://juliasilge.com/)
 
 - [Ryans tutorials](https://ryanstutorials.net/) are a cool resource for introductionary lesson to some programming fundementals
 
@@ -34,7 +34,7 @@ I hope to update this regularly</p>
 
 - [StatQuest](https://www.youtube.com/channel/UCtYLUTtgS3k1Fg4y5tAhLbw) with Josh Stalmer provides simple explanations of all things Stats/ML and comes with a healthy dose of ironic uekele playing, whats not to like?! DOIBLE BAMM.
 
--[fireship](https://www.youtube.com/channel/UCsBjURrPoezykLs9EqgamOA) for all my interest in webdev. Offers great youtube 100 second snippets.
+- [fireship](https://www.youtube.com/channel/UCsBjURrPoezykLs9EqgamOA) for all my interest in webdev. Offers great youtube 100 second snippets.
 
 ## Visualising
 
@@ -65,18 +65,20 @@ I hope to update this regularly</p>
 - [Pudding](https://pudding.cool/) is website dedicated to cool visualization. Worth checking out for some inspo.
 
 
-## Less-well-known Packages I dig
+## Less-well-known Packages
 
 - [SkimR](https://cran.r-project.org/web/packages/skimr/vignettes/skimr.html) - provide summary statistics about variables in data frames
 
+- tidylog
+
 ## Data Packages
-What is data analysis without data
+
+What is data analysis without data.
 
 - tidyquant
 - WDI
 - newsanchor
 - gtrendsR
-
 
 
 ## Pictures speak louder than definitions
