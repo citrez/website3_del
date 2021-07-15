@@ -85,4 +85,4 @@ k fold cross validation
 ![](/del_post_resources/kf-cv.png)
 
 Accuracy interpretability *trade-off*
-![](accuracy_interpret.png)
+![](/del_post_resources/accuracy_interpret.png)
