@@ -1,0 +1,27 @@
+---
+title: Text Matching
+author: Ezra Citron
+date: '2021-07-23'
+slug: []
+categories: []
+tags: []
+description: ~
+featured_image: ~
+---
+
+
+
+<p>One problem I often come across in my work and I also stumbles into a my recent blog about <a href="">harry potter film sales</a> was, I have two lists of words, 1 with words that I actually have, and one that words that i’d like them to be, the task in to map the first onto the second.</p>
+<p>Let me make this more concrete.</p>
+<div id="example" class="section level3">
+<h3>Example</h3>
+</div>
+<div id="levenstine-distance" class="section level3">
+<h3>Levenstine distance</h3>
+<p>The levenstine distance is a fancy way of saying “how different are the letters in these 2 words”. The word ‘getting’ and ‘greeting’ are pretty similar. All you have to do is add an ‘r’ and change a ‘t’ to an ‘e’ and they are the same word. Levenstine distance counts the number of insertions, deletions and letter swaps to get from one word to another, and this is thier levenstine distance.</p>
+<p>The <code>adist</code> function from the <code>utils</code> package which comes built in with R will do this for you.</p>
+<pre class="r"><code>adist(&#39;getting&#39;,&#39;greeting&#39;)</code></pre>
+<pre><code>##      [,1]
+## [1,]    2</code></pre>
+<p>We had to add an ‘r’ and change ‘t’ to ‘e’ to get from the first to the second.</p>
+</div>

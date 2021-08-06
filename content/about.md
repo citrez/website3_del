@@ -12,7 +12,7 @@ I think there are loads of good reason to write a blog, improving communication,
 
 # About my blog
 
-I read about the idea of a ([digital garden](https://nesslabs.com/digital-garden-set-up) a few months ago, and it really resonated with me. I think of this this website as somewhere between a blog and a personal notepad, a place on the internet where I can leave your mark and others can come to explore your thoughts and ideas. 
+I read about the idea of a [digital garden](https://nesslabs.com/digital-garden-set-up) a few months ago, and it really resonated with me. I think of this this website as somewhere between a blog and a personal notepad, a place on the internet where I can leave your mark and others can come to explore your thoughts and ideas. 
 
 I'll be using this blog to write up about data science ideas that I feel are worth sharing.
 Right now my main interests are in ML, text analysis, data-vis and R, so I'll be focusing on

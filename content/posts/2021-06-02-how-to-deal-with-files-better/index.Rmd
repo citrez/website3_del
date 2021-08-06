@@ -1,18 +1,151 @@
 ---
-title: How to Deal with Files Better
+title: How to Manage your Files Better
 author: Ezra Citron
 date: '2021-06-02'
 slug: []
-categories: []
+categories: ['file system']
 tags: []
 description: ~
 featured_image: ~
-draft: true
+draft: false
 ---
+## Intro 
 
-Managing your files boils down to 3 things. Creating them, deleting them and moving them. 
-All of these things you have probably done countless times, by clicking on files in a window that looks very much like this
+Managing your files usually boils down to 3 things.  
+
+1. Creating them
+2. Deleting them
+3. Moving/Renaming them
+
+No doubt, you've done all of these things many times with something like this
+<br><br>
 ![finder](finder.png)
+<br><br>
+That is great, and works very well for *90%* of cases. But, what happens when you have 3,000 files and you need to rename all of then, do you really want to be clicking through each of them and changing them individually?
 
-That is all fine, and works very well for 90% of cases. But, what happens when you have 2000 files and you need to rename all of then, do you really want to be clicking through each of them? This is when a less graphical-user-interface reliance workflow can really come in handy. I'll be setting up a dummy problem and showing you how to solve it with the `fs` package in R. 
+This is when a less graphical-user-interface reliant work-flow can really come in handy. I'll be setting up a dummy problem and showing you how to solve it with the neat `fs` package in R. 
+
+For me, file manipulation is one of those tool to have in your data science toolkit that you may not use everyday, but once in a while you'll look like a magician and be very happy you know about it. 
+
+```{r setup, echo =F}
+knitr::opts_chunk$set(echo = T, message = F,warning = F,cache = T )
+```
+
+## Using the fs Package
+
+### Create a folder
+This will be a dummy folder that we'll delete at the end, so feel free to follow along and not worry that you'll accidentally delete your the entire contents of your computer.
+
+
+```{r}
+library(tidyverse) 
+library(fs)
+dir_create('dummy_folder')
+```
+
+### Add some files
+
+Now lets make 1,000 files. The beauty of the fs package is that the functions are vecotrised. Meaning, you pass in a vector and it applies the function on all the elements of the vector successively. This saves us the messy step of looping or passing to a map function. The path() function from fs, helps us stick file paths together. 
+
+```{r , echo=T}
+file_create(path = path('dummy_folder',paste0('test_',1:12) ), ext = 'txt' )
+```
+
+### Look at the contents for folders
+Now we can explore what is it this folder using dir_ls
+```{r}
+dir_ls('dummy_folder')
+```
+
+Or if we want that in a tidy tibble...
+
+```{r}
+dir_info('dummy_folder')
+```
+
+or if we want a tree of the structure...
+
+```{r}
+fs::dir_tree(path = 'dummy_folder',recurse = 2)
+```
+
+### Combine using the pipe
+Here's the cool part, we can pipe one function into another, so deleting everything in a folder is as simple and readable as this. dir_ls lists the content of the folder and file_delete is a vectorised function that deletes all files in the folder. 
+
+```{r, eval=FALSE}
+dir_ls('dummy_folder') %>% file_delete()
+```
+
+What about changing file names? Also easy. (changing file names in equivalent to 'moving' them to a file with a different name)
+
+```{r}
+ file_move(path = dir_ls('dummy_folder'),
+           new_path = dir_ls('dummy_folder') %>% str_replace('test','train'))
+```
+
+### Now lets detele this dummy folder
+
+```{r}
+dir_ls('dummy_folder') %>% file_delete()
+```
+
+### 'Real World' Use Case
+
+A real word use case may be something like this:
+You have a messy folder with all types of files that have dates in the file name.
+You want to organise them into a separate folders for 2018, 2019, 2020, 2021.
+
+```{r}
+create_dummy_file_names <- function(n = 3){
+  years <- 2018:2021
+  months <- stringr::str_pad(1:12,width = 2,side = 'left',pad = '0')
+  days <- stringr::str_pad(1:31,width = 2,side = 'left',pad = '0')
+  file_names <- paste(
+    sample(years,replace = T,size  = n),
+    sample(months,replace = T,size = n),
+    sample(days,replace = T,size = n),
+    sep = '-')
+  
+  file_names <- paste0('file_',file_names)
+}
+
+
+file_create(path = 
+              path(
+                'dummy_folder',
+                create_dummy_file_names(200) ),
+            ext = 'txt' )
+
+dir_ls('dummy_folder')[1:10]
+```
+
+```{r}
+dir_create(path('dummy_folder',2018:2021))
+
+dir_info_dummy_folder <- dir_info('dummy_folder') %>% # get a df with file info
+  select(path) %>%
+  filter(fs::is_file(path)) %>% # checks
+  mutate(year = str_extract(path,'\\d{4}'),
+         new_path =path(fs::path_dir(path),year,fs::path_file(path)), # extract only the directory part of file path
+         )
+
+  
+```
+
+
+```{r}
+file_move(dir_info_dummy_folder$path,dir_info_dummy_folder$new_path)
+```
+
+Done!
+
+And that was all done within the comfort of a tibble.
+
+### Clean up
+
+```{r}
+dir_ls('dummy_folder') %>% file_delete()
+dir_ls('dummy_folder') %>% dir_delete()
+```
+
 

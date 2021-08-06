@@ -1,18 +1,149 @@
 ---
-title: How to Deal with Files Better
+title: How to Manage your Files Better
 author: Ezra Citron
 date: '2021-06-02'
 slug: []
-categories: []
+categories: ['file system']
 tags: []
 description: ~
 featured_image: ~
-draft: true
+draft: false
 ---
 
 
 
-<p>Managing your files boils down to 3 things. Creating them, deleting them and moving them.
-All of these things you have probably done countless times, by clicking on files in a window that looks very much like this
-<img src="finder.png" alt="finder" /></p>
-<p>That is all fine, and works very well for 90% of cases. But, what happens when you have 2000 files and you need to rename all of then, do you really want to be clicking through each of them? This is when a less graphical-user-interface reliance workflow can really come in handy. I’ll be setting up a dummy problem and showing you how to solve it with the <code>fs</code> package in R.</p>
+<div id="intro" class="section level2">
+<h2>Intro</h2>
+<p>Managing your files usually boils down to 3 things.</p>
+<ol style="list-style-type: decimal">
+<li>Creating them</li>
+<li>Deleting them</li>
+<li>Moving/Renaming them</li>
+</ol>
+<p>No doubt, you’ve done all of these things many times with something like this
+<br><br>
+<img src="finder.png" alt="finder" />
+<br><br>
+That is great, and works very well for <em>90%</em> of cases. But, what happens when you have 3,000 files and you need to rename all of then, do you really want to be clicking through each of them and changing them individually?</p>
+<p>This is when a less graphical-user-interface reliant work-flow can really come in handy. I’ll be setting up a dummy problem and showing you how to solve it with the neat <code>fs</code> package in R.</p>
+<p>For me, file manipulation is one of those tool to have in your data science toolkit that you may not use everyday, but once in a while you’ll look like a magician and be very happy you know about it.</p>
+</div>
+<div id="using-the-fs-package" class="section level2">
+<h2>Using the fs Package</h2>
+<div id="create-a-folder" class="section level3">
+<h3>Create a folder</h3>
+<p>This will be a dummy folder that we’ll delete at the end, so feel free to follow along and not worry that you’ll accidentally delete your the entire contents of your computer.</p>
+<pre class="r"><code>library(tidyverse) 
+library(fs)
+dir_create(&#39;dummy_folder&#39;)</code></pre>
+</div>
+<div id="add-some-files" class="section level3">
+<h3>Add some files</h3>
+<p>Now lets make 1,000 files. The beauty of the fs package is that the functions are vecotrised. Meaning, you pass in a vector and it applies the function on all the elements of the vector successively. This saves us the messy step of looping or passing to a map function. The path() function from fs, helps us stick file paths together.</p>
+<pre class="r"><code>file_create(path = path(&#39;dummy_folder&#39;,paste0(&#39;test_&#39;,1:12) ), ext = &#39;txt&#39; )</code></pre>
+</div>
+<div id="look-at-the-contents-for-folders" class="section level3">
+<h3>Look at the contents for folders</h3>
+<p>Now we can explore what is it this folder using dir_ls</p>
+<pre class="r"><code>dir_ls(&#39;dummy_folder&#39;)</code></pre>
+<pre><code>## dummy_folder/test_1.txt  dummy_folder/test_10.txt dummy_folder/test_11.txt 
+## dummy_folder/test_12.txt dummy_folder/test_2.txt  dummy_folder/test_3.txt  
+## dummy_folder/test_4.txt  dummy_folder/test_5.txt  dummy_folder/test_6.txt  
+## dummy_folder/test_7.txt  dummy_folder/test_8.txt  dummy_folder/test_9.txt</code></pre>
+<p>Or if we want that in a tidy tibble…</p>
+<pre class="r"><code>dir_info(&#39;dummy_folder&#39;)</code></pre>
+<pre><code>## # A tibble: 12 x 18
+##    path        type   size permissions modification_time   user  group device_id
+##    &lt;fs::path&gt;  &lt;fct&gt; &lt;fs:&gt; &lt;fs::perms&gt; &lt;dttm&gt;              &lt;chr&gt; &lt;chr&gt;     &lt;dbl&gt;
+##  1 dummy_fold… file      0 rw-r--r--   2021-08-06 17:57:18 ezra… staff  16777224
+##  2 dummy_fold… file      0 rw-r--r--   2021-08-06 17:57:18 ezra… staff  16777224
+##  3 dummy_fold… file      0 rw-r--r--   2021-08-06 17:57:18 ezra… staff  16777224
+##  4 dummy_fold… file      0 rw-r--r--   2021-08-06 17:57:18 ezra… staff  16777224
+##  5 dummy_fold… file      0 rw-r--r--   2021-08-06 17:57:18 ezra… staff  16777224
+##  6 dummy_fold… file      0 rw-r--r--   2021-08-06 17:57:18 ezra… staff  16777224
+##  7 dummy_fold… file      0 rw-r--r--   2021-08-06 17:57:18 ezra… staff  16777224
+##  8 dummy_fold… file      0 rw-r--r--   2021-08-06 17:57:18 ezra… staff  16777224
+##  9 dummy_fold… file      0 rw-r--r--   2021-08-06 17:57:18 ezra… staff  16777224
+## 10 dummy_fold… file      0 rw-r--r--   2021-08-06 17:57:18 ezra… staff  16777224
+## 11 dummy_fold… file      0 rw-r--r--   2021-08-06 17:57:18 ezra… staff  16777224
+## 12 dummy_fold… file      0 rw-r--r--   2021-08-06 17:57:18 ezra… staff  16777224
+## # … with 10 more variables: hard_links &lt;dbl&gt;, special_device_id &lt;dbl&gt;,
+## #   inode &lt;dbl&gt;, block_size &lt;dbl&gt;, blocks &lt;dbl&gt;, flags &lt;int&gt;, generation &lt;dbl&gt;,
+## #   access_time &lt;dttm&gt;, change_time &lt;dttm&gt;, birth_time &lt;dttm&gt;</code></pre>
+<p>or if we want a tree of the structure…</p>
+<pre class="r"><code>fs::dir_tree(path = &#39;dummy_folder&#39;,recurse = 2)</code></pre>
+<pre><code>## dummy_folder
+## ├── test_1.txt
+## ├── test_10.txt
+## ├── test_11.txt
+## ├── test_12.txt
+## ├── test_2.txt
+## ├── test_3.txt
+## ├── test_4.txt
+## ├── test_5.txt
+## ├── test_6.txt
+## ├── test_7.txt
+## ├── test_8.txt
+## └── test_9.txt</code></pre>
+</div>
+<div id="combine-using-the-pipe" class="section level3">
+<h3>Combine using the pipe</h3>
+<p>Here’s the cool part, we can pipe one function into another, so deleting everything in a folder is as simple and readable as this. dir_ls lists the content of the folder and file_delete is a vectorised function that deletes all files in the folder.</p>
+<pre class="r"><code>dir_ls(&#39;dummy_folder&#39;) %&gt;% file_delete()</code></pre>
+<p>What about changing file names? Also easy. (changing file names in equivalent to ‘moving’ them to a file with a different name)</p>
+<pre class="r"><code> file_move(path = dir_ls(&#39;dummy_folder&#39;),
+           new_path = dir_ls(&#39;dummy_folder&#39;) %&gt;% str_replace(&#39;test&#39;,&#39;train&#39;))</code></pre>
+</div>
+<div id="now-lets-detele-this-dummy-folder" class="section level3">
+<h3>Now lets detele this dummy folder</h3>
+<pre class="r"><code>dir_ls(&#39;dummy_folder&#39;) %&gt;% file_delete()</code></pre>
+</div>
+<div id="real-world-use-case" class="section level3">
+<h3>‘Real World’ Use Case</h3>
+<p>A real word use case may be something like this:
+You have a messy folder with all types of files that have dates in the file name.
+You want to organise them into a separate folders for 2018, 2019, 2020, 2021.</p>
+<pre class="r"><code>create_dummy_file_names &lt;- function(n = 3){
+  years &lt;- 2018:2021
+  months &lt;- stringr::str_pad(1:12,width = 2,side = &#39;left&#39;,pad = &#39;0&#39;)
+  days &lt;- stringr::str_pad(1:31,width = 2,side = &#39;left&#39;,pad = &#39;0&#39;)
+  file_names &lt;- paste(
+    sample(years,replace = T,size  = n),
+    sample(months,replace = T,size = n),
+    sample(days,replace = T,size = n),
+    sep = &#39;-&#39;)
+  
+  file_names &lt;- paste0(&#39;file_&#39;,file_names)
+}
+
+
+file_create(path = 
+              path(
+                &#39;dummy_folder&#39;,
+                create_dummy_file_names(200) ),
+            ext = &#39;txt&#39; )
+
+dir_ls(&#39;dummy_folder&#39;)[1:10]</code></pre>
+<pre><code>## dummy_folder/file_2018-01-05.txt dummy_folder/file_2018-01-14.txt 
+## dummy_folder/file_2018-01-16.txt dummy_folder/file_2018-01-19.txt 
+## dummy_folder/file_2018-01-22.txt dummy_folder/file_2018-01-27.txt 
+## dummy_folder/file_2018-02-02.txt dummy_folder/file_2018-02-04.txt 
+## dummy_folder/file_2018-02-09.txt dummy_folder/file_2018-02-14.txt</code></pre>
+<pre class="r"><code>dir_create(path(&#39;dummy_folder&#39;,2018:2021))
+
+dir_info_dummy_folder &lt;- dir_info(&#39;dummy_folder&#39;) %&gt;% # get a df with file info
+  select(path) %&gt;%
+  filter(fs::is_file(path)) %&gt;% # checks
+  mutate(year = str_extract(path,&#39;\\d{4}&#39;),
+         new_path =path(fs::path_dir(path),year,fs::path_file(path)), # extract only the directory part of file path
+         )</code></pre>
+<pre class="r"><code>file_move(dir_info_dummy_folder$path,dir_info_dummy_folder$new_path)</code></pre>
+<p>Done!</p>
+<p>And that was all done within the comfort of a tibble.</p>
+</div>
+<div id="clean-up" class="section level3">
+<h3>Clean up</h3>
+<pre class="r"><code>dir_ls(&#39;dummy_folder&#39;) %&gt;% file_delete()
+dir_ls(&#39;dummy_folder&#39;) %&gt;% dir_delete()</code></pre>
+</div>
+</div>

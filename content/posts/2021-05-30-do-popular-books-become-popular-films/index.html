@@ -7,32 +7,32 @@ categories: ['webscraping']
 tags: []
 description: ~
 featured_image: harry_potter.jpeg
-draft: true
-
+draft: false
 ---
 
 
 
 <p>I was watching one of the Harry Potter films for the umpteenth time, wondering how such a mediocre film went on to be such huge box office hit. The answer is obvious, the books were hugely popular, and there are hundreds of millions of loyal fans who would watch the film regardless of the quality.
-Let me to ask though, in general though, will a popular book always do well when converted to a film. What is the relationship like between books sales and box office success and which films are the exceptions? To what extent can I use book sales as a predictor of box office success?</p>
+It led me to ask, in general though, will a popular book always do well when converted to a film? What is the relationship like between books sales and box office success and which films are the exceptions? To what extent can I use book sales as a predictor of box office success?</p>
 <p>First things first, lets collect some data.
 We need information on book sales and gross movie sales.</p>
-<pre class="r"><code>library(tidyverse)
+<pre class="r watch-out"><code>library(tidyverse)
 library(rvest)</code></pre>
-<p><img align="right" width="1000" height="500" src="wiki.png" >
-Wikipedia often has great tables with this type of information. I’m going to scrape all the book sales data I need from <a href="https://en.wikipedia.org/wiki/List_of_best-selling_books">this</a> wiki page.</p>
-<p><br>
+<p>Wikipedia often has great tables with this type of information. I’ll be using <a href="https://en.wikipedia.org/wiki/List_of_best-selling_books">this</a> wiki page.<br />
+<br>
+<img align = "left" width="1000" height="500" src="wiki.png" ><br />
 <br>
 <br>
-I want to use all this book sales data for my analysis, however, there are over 300 rows, its too much to copy out manually, or even copy and paste. This is a great opportunity to try out rvest, R’s webscraping package.</p>
+<br>
+<br></p>
+<p>I want to use all this book sales data for my analysis, however, there are over 300 rows, its far too much to copy out manually, or even copy and paste. This is a great opportunity to try out <code>rvest</code>, R’s webscraping package.</p>
 <pre class="r"><code>book_wiki_page &lt;- &quot;https://en.wikipedia.org/wiki/List_of_best-selling_books#List_of_best-selling_individual_books&quot;
 
 book_html &lt;- xml2::read_html(book_wiki_page)</code></pre>
-<p>It’s hard to get very far in webscraping without at least a very basic understanding of
-the language which determines how things are styled and laid out on a webpage (HTML and CSS).</p>
+<p>It’s hard to get very far in webscraping without at least a very basic understanding of the languages which determines how things are styled and laid out on a webpag, HTML and CSS.</p>
+<p>This code tells the computer where to look in the webpage to get the table data we’re looking for.</p>
 <pre class="r"><code>all_tables &lt;- book_html %&gt;% 
   html_nodes(css = &quot;table.wikitable.sortable&quot; ) </code></pre>
-<p>This piece of code tells the computer where to look in the webpage to get the table data we’re looking for.</p>
 <p>We now have a list, containing all the tables on the webpage, we want to turn all these individual tables into nice dataframes, and then combine all those 15 dataframes in to a master dataframe with all the information in it.
 This is a perfect use case for functional programming using <code>purrr</code>.</p>
 <pre class="r"><code>parse_table &lt;- function(x) {
@@ -76,37 +76,119 @@ book_table &lt;- combined_table %&gt;%
   select(-`Book series`,-`No. of installments`)</code></pre>
 <p>One last cleanup on the books table</p>
 <p>This is our books table</p>
-<pre class="r"><code>book_series_table</code></pre>
-<pre><code>## # A tibble: 120 x 8
-##    `Book series`  `Author(s)` `Original langu… `First publishe… `Approximate sa…
-##    &lt;chr&gt;          &lt;chr&gt;       &lt;chr&gt;            &lt;chr&gt;            &lt;chr&gt;           
-##  1 Harry Potter   J. K. Rowl… English          1997–present     500 million[8][…
-##  2 Goosebumps     R. L. Stine English          1992–present     350 million[175]
-##  3 Perry Mason    Erle Stanl… English          1933–1973        300 million[176]
-##  4 Berenstain Be… Stan and J… English          1962–present     260 million[177]
-##  5 Choose Your O… Various au… English          1979–1998        250 million[178]
-##  6 Diary of a Wi… Jeff Kinney English          2007–present     250 million[179]
-##  7 Sweet Valley … Francine P… English          1983–2003        250 million[180]
-##  8 Noddy          Enid Blyton English          1949–present     200 million[181]
-##  9 Nancy Drew     Various au… English          1930–present     200 million[182]
-## 10 The Railway S… Rev. W. Aw… English          1945–2011        200 million[183]
-## # … with 110 more rows, and 3 more variables: Genre &lt;chr&gt;,
-## #   No. of installments &lt;chr&gt;, Approximate sales_dbl &lt;dbl&gt;</code></pre>
+<pre class="r"><code>book_series_table %&gt;% head(n = 3) %&gt;% knitr::kable()</code></pre>
+<table style="width:100%;">
+<colgroup>
+<col width="9%" />
+<col width="15%" />
+<col width="13%" />
+<col width="11%" />
+<col width="14%" />
+<col width="4%" />
+<col width="15%" />
+<col width="16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Book series</th>
+<th align="left">Author(s)</th>
+<th align="left">Original language</th>
+<th align="left">First published</th>
+<th align="left">Approximate sales</th>
+<th align="left">Genre</th>
+<th align="left">No. of installments</th>
+<th align="right">Approximate sales_dbl</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Harry Potter</td>
+<td align="left">J. K. Rowling</td>
+<td align="left">English</td>
+<td align="left">1997–present</td>
+<td align="left">500 million[8][175]</td>
+<td align="left">NA</td>
+<td align="left">7 + spin offs</td>
+<td align="right">5.0e+08</td>
+</tr>
+<tr class="even">
+<td align="left">Goosebumps</td>
+<td align="left">R. L. Stine</td>
+<td align="left">English</td>
+<td align="left">1992–present</td>
+<td align="left">350 million[176]</td>
+<td align="left">NA</td>
+<td align="left">62 + spin-off series</td>
+<td align="right">3.5e+08</td>
+</tr>
+<tr class="odd">
+<td align="left">Perry Mason</td>
+<td align="left">Erle Stanley Gardner</td>
+<td align="left">English</td>
+<td align="left">1933–1973</td>
+<td align="left">300 million[177]</td>
+<td align="left">NA</td>
+<td align="left">82 + 4 short stories</td>
+<td align="right">3.0e+08</td>
+</tr>
+</tbody>
+</table>
 <p>This is our series table</p>
-<pre class="r"><code>book_series_table</code></pre>
-<pre><code>## # A tibble: 120 x 8
-##    `Book series`  `Author(s)` `Original langu… `First publishe… `Approximate sa…
-##    &lt;chr&gt;          &lt;chr&gt;       &lt;chr&gt;            &lt;chr&gt;            &lt;chr&gt;           
-##  1 Harry Potter   J. K. Rowl… English          1997–present     500 million[8][…
-##  2 Goosebumps     R. L. Stine English          1992–present     350 million[175]
-##  3 Perry Mason    Erle Stanl… English          1933–1973        300 million[176]
-##  4 Berenstain Be… Stan and J… English          1962–present     260 million[177]
-##  5 Choose Your O… Various au… English          1979–1998        250 million[178]
-##  6 Diary of a Wi… Jeff Kinney English          2007–present     250 million[179]
-##  7 Sweet Valley … Francine P… English          1983–2003        250 million[180]
-##  8 Noddy          Enid Blyton English          1949–present     200 million[181]
-##  9 Nancy Drew     Various au… English          1930–present     200 million[182]
-## 10 The Railway S… Rev. W. Aw… English          1945–2011        200 million[183]
-## # … with 110 more rows, and 3 more variables: Genre &lt;chr&gt;,
-## #   No. of installments &lt;chr&gt;, Approximate sales_dbl &lt;dbl&gt;</code></pre>
-<p>I followed a similar process to get data for the top grossing films.</p>
+<pre class="r"><code>book_series_table %&gt;% head(n = 3) %&gt;% knitr::kable()</code></pre>
+<table style="width:100%;">
+<colgroup>
+<col width="9%" />
+<col width="15%" />
+<col width="13%" />
+<col width="11%" />
+<col width="14%" />
+<col width="4%" />
+<col width="15%" />
+<col width="16%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Book series</th>
+<th align="left">Author(s)</th>
+<th align="left">Original language</th>
+<th align="left">First published</th>
+<th align="left">Approximate sales</th>
+<th align="left">Genre</th>
+<th align="left">No. of installments</th>
+<th align="right">Approximate sales_dbl</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Harry Potter</td>
+<td align="left">J. K. Rowling</td>
+<td align="left">English</td>
+<td align="left">1997–present</td>
+<td align="left">500 million[8][175]</td>
+<td align="left">NA</td>
+<td align="left">7 + spin offs</td>
+<td align="right">5.0e+08</td>
+</tr>
+<tr class="even">
+<td align="left">Goosebumps</td>
+<td align="left">R. L. Stine</td>
+<td align="left">English</td>
+<td align="left">1992–present</td>
+<td align="left">350 million[176]</td>
+<td align="left">NA</td>
+<td align="left">62 + spin-off series</td>
+<td align="right">3.5e+08</td>
+</tr>
+<tr class="odd">
+<td align="left">Perry Mason</td>
+<td align="left">Erle Stanley Gardner</td>
+<td align="left">English</td>
+<td align="left">1933–1973</td>
+<td align="left">300 million[177]</td>
+<td align="left">NA</td>
+<td align="left">82 + 4 short stories</td>
+<td align="right">3.0e+08</td>
+</tr>
+</tbody>
+</table>
+<p>I followed a similar process to get data for the top grossing films. In a future blog post, i’ll analyse this scraped data to look at the relationship between book sales and performance at the box office.</p>
